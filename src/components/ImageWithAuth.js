@@ -25,7 +25,7 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
         let imageUrl = src;
         imageUrl = `${API_BASE_URL}${src}`;
 
-
+        console.log('imageUrl', imageUrl);  
         const separator = imageUrl.includes('?') ? '&' : '?';
         const cacheBuster = `_t=${Date.now()}`;
         imageUrl = `${imageUrl}${separator}${cacheBuster}`;
