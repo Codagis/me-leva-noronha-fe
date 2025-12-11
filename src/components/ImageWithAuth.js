@@ -23,8 +23,15 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
         const token = localStorage.getItem('accessToken');
         
         let imageUrl = src;
+        
+        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+          imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+        }
+        
+        if (process.env.NODE_ENV === 'production' && imageUrl.startsWith('http://')) {
+          imageUrl = imageUrl.replace('http://', 'https://');
+        }
 
-        console.log('imageUrl', imageUrl);  
         const separator = imageUrl.includes('?') ? '&' : '?';
         const cacheBuster = `_t=${Date.now()}`;
         imageUrl = `${imageUrl}${separator}${cacheBuster}`;
