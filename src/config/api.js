@@ -1,5 +1,5 @@
 const getApiBaseUrl = () => {
-  const apiUrl = process.env.REACT_APP_API_URL;
+  let apiUrl = process.env.REACT_APP_API_URL;
   
   if (!apiUrl) {
     if (process.env.NODE_ENV === 'production') {
@@ -8,6 +8,15 @@ const getApiBaseUrl = () => {
     }
     console.warn('REACT_APP_API_URL não está definida. Usando localhost para desenvolvimento.');
     return 'http://localhost:8080';
+  }
+  
+  // Remove barra final se existir
+  apiUrl = apiUrl.replace(/\/$/, '');
+  
+  // Em produção, força HTTPS se a URL for HTTP (evita Mixed Content)
+  if (process.env.NODE_ENV === 'production' && apiUrl.startsWith('http://')) {
+    console.warn('⚠️ URL da API está usando HTTP. Convertendo para HTTPS para evitar Mixed Content.');
+    apiUrl = apiUrl.replace('http://', 'https://');
   }
   
   return apiUrl;
