@@ -1,0 +1,43 @@
+.dashboard-container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.dashboard-content {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  background: white;
+  border-radius: 8px;
+  padding: 48px;
+  border: 1px solid #e5e5e5;
+  text-align: center;
+}
+
+.welcome-card h2 {
+  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+}
+
+.welcome-card p {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 20px;
+  }
+
+  .welcome-card {
+    padding: 30px 20px;
+  }
+}
+
