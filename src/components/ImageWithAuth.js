@@ -23,7 +23,6 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
         const token = localStorage.getItem('accessToken');
         
         let imageUrl = src;
-        imageUrl = `${API_BASE_URL}${src}`;
 
         console.log('imageUrl', imageUrl);  
         const separator = imageUrl.includes('?') ? '&' : '?';
