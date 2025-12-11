@@ -23,9 +23,8 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
         const token = localStorage.getItem('accessToken');
         
         let imageUrl = src;
-        if (!src.startsWith('http')) {
-          imageUrl = `${API_BASE_URL}${src}`;
-        }
+        imageUrl = `${API_BASE_URL}${src}`;
+
 
         const separator = imageUrl.includes('?') ? '&' : '?';
         const cacheBuster = `_t=${Date.now()}`;

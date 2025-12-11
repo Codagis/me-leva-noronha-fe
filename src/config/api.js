@@ -10,10 +10,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8080';
   }
   
-  // Remove barra final se existir
   apiUrl = apiUrl.replace(/\/$/, '');
   
-  // Em produção, força HTTPS se a URL for HTTP (evita Mixed Content)
   if (process.env.NODE_ENV === 'production' && apiUrl.startsWith('http://')) {
     console.warn('⚠️ URL da API está usando HTTP. Convertendo para HTTPS para evitar Mixed Content.');
     apiUrl = apiUrl.replace('http://', 'https://');
