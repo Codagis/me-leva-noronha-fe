@@ -50,14 +50,11 @@ const Login = ({
             <Form
               name="login"
               onFinish={(values) => {
-                onUsernameChange({ target: { value: values.username } });
-                onSenhaChange({ target: { value: values.senha } });
                 const fakeEvent = {
                   preventDefault: () => {}
                 };
-                requestAnimationFrame(() => {
-                  onSubmit(fakeEvent);
-                });
+                // Passa os valores diretamente do formulário para evitar problema de estado não atualizado
+                onSubmit(fakeEvent, values);
               }}
               layout="vertical"
               size="large"

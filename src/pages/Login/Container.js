@@ -9,12 +9,16 @@ const LoginContainer = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, formValues = null) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = await login(username, senha);
+    // Usa os valores do formulário se fornecidos, caso contrário usa o estado
+    const finalUsername = formValues?.username || username;
+    const finalSenha = formValues?.senha || senha;
+
+    const result = await login(finalUsername, finalSenha);
 
     if (!result.success) {
       setError(result.error || 'Credenciais inválidas');
