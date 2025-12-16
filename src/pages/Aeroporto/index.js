@@ -20,7 +20,9 @@ import {
   DeleteOutlined, 
   EyeOutlined,
   EnvironmentOutlined,
-  BankOutlined
+  BankOutlined,
+  SearchOutlined,
+  ClearOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -32,6 +34,7 @@ const Aeroporto = ({
   selectedAeroporto,
   editingAeroporto,
   formData,
+  searchTerm,
   onInputChange,
   onSubmit,
   onShowForm,
@@ -41,6 +44,8 @@ const Aeroporto = ({
   onEdit,
   onDelete,
   onRefresh,
+  onSearch,
+  onClearFilter,
 }) => {
   const [form] = Form.useForm();
 
@@ -81,28 +86,60 @@ const Aeroporto = ({
 
   return (
     <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: 24
-      }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 400, color: '#262626' }}>Aeroportos</Title>
-        <Space>
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={onRefresh} 
-            loading={loading}
-          >
-            Atualizar
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={onShowForm}
-          >
-            Adicionar
-          </Button>
-        </Space>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: 16
+        }}>
+          <Title level={2} style={{ margin: 0, fontWeight: 400, color: '#262626' }}>Aeroportos</Title>
+          <Space>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={onRefresh} 
+              loading={loading}
+            >
+              Atualizar
+            </Button>
+            <Button 
+              type="primary" 
+              onClick={onShowForm}
+            >
+              Adicionar
+            </Button>
+          </Space>
+        </div>
+        
+        <div style={{ 
+          display: 'flex', 
+          gap: 12, 
+          alignItems: 'center',
+          flexWrap: 'wrap'
+        }}>
+          <Input
+            placeholder="Buscar por cidade, nome do aeroporto ou código IATA..."
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            value={searchTerm}
+            onChange={(e) => onSearch(e.target.value)}
+            allowClear
+            style={{ 
+              maxWidth: 400,
+              flex: 1,
+              minWidth: 250
+            }}
+            onPressEnter={(e) => onSearch(e.target.value)}
+          />
+          {searchTerm && (
+            <Button 
+              icon={<ClearOutlined />}
+              onClick={onClearFilter}
+              style={{ minWidth: 100 }}
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
       </div>
 
       <Modal
@@ -281,7 +318,11 @@ const Aeroporto = ({
         </div>
       )}
 
-      {!loading && aeroportos.length === 0 && (
+      {!loading && aeroportos.length === 0 && searchTerm && (
+        <Empty description={`Nenhum aeroporto encontrado para "${searchTerm}"`} />
+      )}
+
+      {!loading && aeroportos.length === 0 && !searchTerm && (
         <Empty description="Nenhum aeroporto cadastrado ainda." />
       )}
 
@@ -395,5 +436,6 @@ const Aeroporto = ({
 };
 
 export default Aeroporto;
+
 
 

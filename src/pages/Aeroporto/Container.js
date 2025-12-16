@@ -7,10 +7,12 @@ import Aeroporto from './index';
 const AeroportoContainer = () => {
   const { showError, showSuccess } = useToast();
   const [aeroportos, setAeroportos] = useState([]);
+  const [aeroportosFiltrados, setAeroportosFiltrados] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedAeroporto, setSelectedAeroporto] = useState(null);
   const [editingAeroporto, setEditingAeroporto] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
     cidade: '',
@@ -27,11 +29,42 @@ const AeroportoContainer = () => {
     try {
       const response = await api.listarAeroportos();
       setAeroportos(response);
+      aplicarFiltro(response, searchTerm);
     } catch (err) {
       showError(err.message || 'Erro ao carregar aeroportos');
     } finally {
       setLoading(false);
     }
+  };
+
+  const aplicarFiltro = (lista, termo) => {
+    if (!termo || termo.trim() === '') {
+      setAeroportosFiltrados(lista);
+      return;
+    }
+
+    const termoLower = termo.toLowerCase().trim();
+    const filtrados = lista.filter(aeroporto => {
+      const cidade = (aeroporto.cidade || '').toLowerCase();
+      const nomeAeroporto = (aeroporto.nomeAeroporto || '').toLowerCase();
+      const codigoIATA = (aeroporto.codigoIATA || '').toLowerCase();
+      
+      return cidade.includes(termoLower) || 
+             nomeAeroporto.includes(termoLower) || 
+             codigoIATA.includes(termoLower);
+    });
+    
+    setAeroportosFiltrados(filtrados);
+  };
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    aplicarFiltro(aeroportos, value);
+  };
+
+  const handleClearFilter = () => {
+    setSearchTerm('');
+    setAeroportosFiltrados(aeroportos);
   };
 
   const handleInputChange = (e) => {
@@ -62,6 +95,10 @@ const AeroportoContainer = () => {
       } : formData;
 
       if (editingAeroporto) {
+        if (!editingAeroporto.id) {
+          showError('ID do aeroporto não encontrado');
+          return;
+        }
         await api.atualizarAeroporto(editingAeroporto.id, finalValues);
         showSuccess('Aeroporto atualizado com sucesso!');
       } else {
@@ -109,6 +146,10 @@ const AeroportoContainer = () => {
   };
 
   const handleEdit = (aeroporto) => {
+    if (!aeroporto || !aeroporto.id) {
+      showError('Aeroporto inválido para edição');
+      return;
+    }
     setEditingAeroporto(aeroporto);
     setFormData({
       cidade: aeroporto.cidade || '',
@@ -119,7 +160,10 @@ const AeroportoContainer = () => {
   };
 
   const handleDelete = async (aeroporto) => {
-    if (!aeroporto) return;
+    if (!aeroporto || !aeroporto.id) {
+      showError('Aeroporto inválido para exclusão');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -136,12 +180,13 @@ const AeroportoContainer = () => {
   return (
     <Layout>
       <Aeroporto
-        aeroportos={aeroportos}
+        aeroportos={aeroportosFiltrados}
         loading={loading}
         showForm={showForm}
         selectedAeroporto={selectedAeroporto}
         editingAeroporto={editingAeroporto}
         formData={formData}
+        searchTerm={searchTerm}
         onInputChange={handleInputChange}
         onSubmit={handleSubmit}
         onShowForm={handleShowForm}
@@ -151,11 +196,14 @@ const AeroportoContainer = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onRefresh={carregarAeroportos}
+        onSearch={handleSearch}
+        onClearFilter={handleClearFilter}
       />
     </Layout>
   );
 };
 
 export default AeroportoContainer;
+
 
 

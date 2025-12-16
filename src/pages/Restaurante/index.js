@@ -53,22 +53,31 @@ const Restaurante = ({
   onRefresh,
 }) => {
   const [form] = Form.useForm();
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [selectedCardapioFile, setSelectedCardapioFile] = useState(null);
 
   useEffect(() => {
     if (showForm) {
       if (!editingRestaurante) {
         form.resetFields();
+        setSelectedImageFile(null);
+        setSelectedCardapioFile(null);
       } else if (editingRestaurante) {
         const values = {
           nome: editingRestaurante.nome || '',
           descricao: editingRestaurante.descricao || '',
           numeroWhatsapp: editingRestaurante.numeroWhatsapp || '',
           categoria: editingRestaurante.categoria || 'ECONOMICO',
+          tipoAcao: editingRestaurante.tipoAcao || null,
         };
         form.setFieldsValue(values);
+        setSelectedImageFile(null);
+        setSelectedCardapioFile(null);
       }
     } else {
       form.resetFields();
+      setSelectedImageFile(null);
+      setSelectedCardapioFile(null);
     }
   }, [showForm, editingRestaurante, form]);
 
@@ -88,12 +97,14 @@ const Restaurante = ({
       descricao: values.descricao || '',
       numeroWhatsapp: values.numeroWhatsapp || '',
       categoria: values.categoria || 'ECONOMICO',
+      tipoAcao: values.tipoAcao || null,
     };
     
     onInputChange({ target: { name: 'nome', value: formValues.nome } });
     onInputChange({ target: { name: 'descricao', value: formValues.descricao } });
     onInputChange({ target: { name: 'numeroWhatsapp', value: formValues.numeroWhatsapp } });
     onInputChange({ target: { name: 'categoria', value: formValues.categoria } });
+    onInputChange({ target: { name: 'tipoAcao', value: formValues.tipoAcao } });
     
     const fakeEvent = {
       preventDefault: () => {}
@@ -166,11 +177,13 @@ const Restaurante = ({
             descricao: editingRestaurante.descricao || formData.descricao || '',
             numeroWhatsapp: editingRestaurante.numeroWhatsapp || formData.numeroWhatsapp || '',
             categoria: editingRestaurante.categoria || formData.categoria || 'ECONOMICO',
+            tipoAcao: editingRestaurante.tipoAcao || formData.tipoAcao || null,
           } : {
             nome: '',
             descricao: '',
             numeroWhatsapp: '',
             categoria: 'ECONOMICO',
+            tipoAcao: null,
           }}
         >
           <Form.Item
@@ -245,6 +258,22 @@ const Restaurante = ({
           </Row>
 
           <Form.Item
+            label="Tipo de Ação"
+            name="tipoAcao"
+            validateStatus={validationErrors?.tipoAcao ? 'error' : ''}
+            help={validationErrors?.tipoAcao}
+          >
+            <Select
+              placeholder="Selecione o tipo de ação"
+              allowClear
+              disabled={loading}
+            >
+              <Option value="FAZER_RESERVA">Fazer Reserva</Option>
+              <Option value="FAZER_PEDIDO">Fazer Pedido</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
             label={`Imagem ${editingRestaurante ? '(opcional)' : ''}`}
             name="imagem"
             rules={!editingRestaurante ? [{ required: true, message: 'Por favor, selecione uma imagem!' }] : []}
@@ -252,14 +281,67 @@ const Restaurante = ({
             <Upload
               accept="image/*"
               beforeUpload={(file) => {
+                setSelectedImageFile(file);
                 onFileChange({ target: { name: 'imagem', files: [file] } });
                 return false;
               }}
+              onRemove={() => {
+                setSelectedImageFile(null);
+                onFileChange({ target: { name: 'imagem', files: [] } });
+              }}
               maxCount={1}
               disabled={loading}
+              fileList={selectedImageFile ? [{
+                uid: '-1',
+                name: selectedImageFile.name,
+                status: 'done',
+              }] : []}
             >
               <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
             </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Cardápio (PDF)"
+            name="cardapio"
+            help={selectedCardapioFile ? `Arquivo selecionado: ${selectedCardapioFile.name}` : editingRestaurante?.linkCardapio ? 'Cardápio já cadastrado. Selecione um novo arquivo para substituir.' : 'Selecione um arquivo PDF com o cardápio do restaurante'}
+          >
+            <Upload
+              accept=".pdf,application/pdf"
+              beforeUpload={(file) => {
+                if (file.type !== 'application/pdf') {
+                  return false;
+                }
+                setSelectedCardapioFile(file);
+                onFileChange({ target: { name: 'cardapio', files: [file] } });
+                return false;
+              }}
+              onRemove={() => {
+                setSelectedCardapioFile(null);
+                onFileChange({ target: { name: 'cardapio', files: [] } });
+              }}
+              maxCount={1}
+              disabled={loading}
+              fileList={selectedCardapioFile ? [{
+                uid: '-1',
+                name: selectedCardapioFile.name,
+                status: 'done',
+              }] : []}
+            >
+              <Button icon={<UploadOutlined />}>Selecionar Cardápio PDF</Button>
+            </Upload>
+            {editingRestaurante?.linkCardapio && !selectedCardapioFile && (
+              <div style={{ marginTop: 8 }}>
+                <a 
+                  href={editingRestaurante.linkCardapio} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: '#1890ff' }}
+                >
+                  Ver cardápio atual
+                </a>
+              </div>
+            )}
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
@@ -297,10 +379,10 @@ const Restaurante = ({
             Fechar
           </Button>
         ]}
-        width={900}
-        style={{ top: 40 }}
+        width={1000}
+        style={{ top: 20 }}
         styles={{
-          body: { padding: '32px' }
+          body: { padding: '32px', maxHeight: '90vh', overflowY: 'auto' }
         }}
       >
         {selectedRestaurante && (
@@ -320,7 +402,7 @@ const Restaurante = ({
             </div>
 
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={8}>
                 <div style={{ 
                   padding: '12px 16px', 
                   background: '#f0f7ff', 
@@ -333,7 +415,7 @@ const Restaurante = ({
                   <Tag>{selectedRestaurante.categoriaCifroes || selectedRestaurante.categoria}</Tag>
                 </div>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <div style={{ 
                   padding: '12px 16px', 
                   background: '#f0f7ff', 
@@ -357,7 +439,69 @@ const Restaurante = ({
                   </a>
                 </div>
               </Col>
+              <Col span={8}>
+                <div style={{ 
+                  padding: '12px 16px', 
+                  background: '#f0f7ff', 
+                  borderRadius: 6,
+                  border: '1px solid #d4edda'
+                }}>
+                  <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 4 }}>
+                    Tipo de Ação:
+                  </Text>
+                  <Tag color={selectedRestaurante.tipoAcao ? 'blue' : 'default'}>
+                    {selectedRestaurante.tipoAcao === 'FAZER_RESERVA' ? 'Fazer Reserva' : 
+                     selectedRestaurante.tipoAcao === 'FAZER_PEDIDO' ? 'Fazer Pedido' : 
+                     'Não definido'}
+                  </Tag>
+                </div>
+              </Col>
             </Row>
+
+            {selectedRestaurante.linkCardapio && (
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: 12 
+                }}>
+                  <Text strong style={{ fontSize: 14, color: '#595959' }}>
+                    Cardápio:
+                  </Text>
+                  <a 
+                    href={selectedRestaurante.linkCardapio} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ 
+                      color: '#1890ff',
+                      fontSize: 12,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Abrir em nova aba
+                  </a>
+                </div>
+                <div style={{
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  backgroundColor: '#f5f5f5'
+                }}>
+                  <iframe
+                    src={`${selectedRestaurante.linkCardapio}#toolbar=1&navpanes=1&scrollbar=1`}
+                    title="Cardápio PDF"
+                    style={{
+                      width: '100%',
+                      height: '600px',
+                      border: 'none',
+                      display: 'block'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
@@ -549,6 +693,53 @@ const Restaurante = ({
                       <Text style={{ fontSize: 12, color: '#595959', display: 'block', marginBottom: 4 }}>
                         <WhatsAppOutlined /> {restaurante.numeroWhatsapp}
                       </Text>
+                      {restaurante.tipoAcao && (
+                        <Tag 
+                          size="small" 
+                          color="blue"
+                          style={{ marginTop: 4 }}
+                        >
+                          {restaurante.tipoAcao === 'FAZER_RESERVA' ? 'Fazer Reserva' : 'Fazer Pedido'}
+                        </Tag>
+                      )}
+                      {restaurante.linkCardapio && (
+                        <div style={{ marginTop: 8 }}>
+                          <Button
+                            type="primary"
+                            size="small"
+                            href={restaurante.linkCardapio}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(restaurante.linkCardapio, '_blank');
+                            }}
+                            style={{
+                              width: '100%',
+                              borderRadius: 6,
+                              height: 32,
+                              fontSize: 12,
+                              fontWeight: 500,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 6,
+                              boxShadow: '0 2px 4px rgba(24, 144, 255, 0.2)',
+                              transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 4px 8px rgba(24, 144, 255, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(24, 144, 255, 0.2)';
+                            }}
+                          >
+                            Ver Cardápio
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 }

@@ -53,7 +53,6 @@ const Login = ({
                 const fakeEvent = {
                   preventDefault: () => {}
                 };
-                // Passa os valores diretamente do formulário para evitar problema de estado não atualizado
                 onSubmit(fakeEvent, values);
               }}
               layout="vertical"

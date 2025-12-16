@@ -14,7 +14,6 @@ const LoginContainer = () => {
     setError('');
     setLoading(true);
 
-    // Usa os valores do formulário se fornecidos, caso contrário usa o estado
     const finalUsername = formValues?.username || username;
     const finalSenha = formValues?.senha || senha;
 

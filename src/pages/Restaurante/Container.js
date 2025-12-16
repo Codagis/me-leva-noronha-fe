@@ -21,6 +21,8 @@ const RestauranteContainer = () => {
     numeroWhatsapp: '',
     categoria: 'ECONOMICO',
     imagem: null,
+    cardapio: null,
+    tipoAcao: null,
   });
 
   useEffect(() => {
@@ -66,6 +68,8 @@ const RestauranteContainer = () => {
       numeroWhatsapp: '',
       categoria: 'ECONOMICO',
       imagem: null,
+      cardapio: null,
+      tipoAcao: null,
     });
   };
 
@@ -79,6 +83,7 @@ const RestauranteContainer = () => {
         descricao: formValues.descricao,
         numeroWhatsapp: formValues.numeroWhatsapp,
         categoria: formValues.categoria,
+        tipoAcao: formValues.tipoAcao,
       } : formData;
 
       const formDataToSend = new FormData();
@@ -87,14 +92,26 @@ const RestauranteContainer = () => {
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       formDataToSend.append('categoria', finalValues.categoria);
       
+      if (finalValues.tipoAcao && finalValues.tipoAcao.trim() !== '') {
+        formDataToSend.append('tipoAcao', finalValues.tipoAcao);
+      } else if (editingRestaurante) {
+        formDataToSend.append('tipoAcao', '');
+      }
+      
       if (editingRestaurante) {
         if (formData.imagem) {
           formDataToSend.append('imagem', formData.imagem);
+        }
+        if (formData.cardapio) {
+          formDataToSend.append('cardapio', formData.cardapio);
         }
         await api.atualizarRestaurante(editingRestaurante.id, formDataToSend);
         showSuccess('Restaurante atualizado com sucesso!');
       } else {
         formDataToSend.append('imagem', formData.imagem);
+        if (formData.cardapio) {
+          formDataToSend.append('cardapio', formData.cardapio);
+        }
         await api.cadastrarRestaurante(formDataToSend);
         showSuccess('Restaurante cadastrado com sucesso!');
       }
@@ -172,6 +189,8 @@ const RestauranteContainer = () => {
       numeroWhatsapp: restaurante.numeroWhatsapp || '',
       categoria: restaurante.categoria || 'ECONOMICO',
       imagem: null,
+      cardapio: null,
+      tipoAcao: restaurante.tipoAcao || null,
     });
     setShowForm(true);
   };

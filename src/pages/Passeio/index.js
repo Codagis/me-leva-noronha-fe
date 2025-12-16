@@ -122,14 +122,14 @@ const Passeio = ({
 
   const handleAddItem = () => {
     if (itemInput.trim()) {
-      const newItems = [...formData.itensIncluidos, itemInput.trim()];
+      const newItems = [...(formData.itensIncluidos || []), itemInput.trim()];
       onItensIncluidosChange(newItems);
       setItemInput('');
     }
   };
 
-  const handleRemoveItem = (index) => {
-    const newItems = formData.itensIncluidos.filter((_, i) => i !== index);
+  const handleRemoveItem = (indexToRemove) => {
+    const newItems = (formData.itensIncluidos || []).filter((_, i) => i !== indexToRemove);
     onItensIncluidosChange(newItems);
   };
 
@@ -144,6 +144,28 @@ const Passeio = ({
   const formatTopRanking = (topRanking) => {
     if (!topRanking) return '';
     return topRanking.replace('_', ' ');
+  };
+
+  const formatDuracao = (duracao) => {
+    if (!duracao) return '';
+    const duracaoLower = duracao.toLowerCase().trim();
+    const duracaoSemHoras = duracaoLower
+      .replace(/\s*horas?\s*/gi, '')
+      .replace(/\s*hora\s*/gi, '')
+      .replace(/\s*HORAS?\s*/g, '')
+      .replace(/\s*HORA\s*/g, '')
+      .trim();
+    
+    if (!duracaoSemHoras) return duracao;
+    
+    const numero = parseFloat(duracaoSemHoras);
+    if (isNaN(numero)) return duracao;
+    
+    if (numero === 1) {
+      return '1 hora';
+    } else {
+      return `${numero} horas`;
+    }
   };
 
   return (
@@ -302,16 +324,20 @@ const Passeio = ({
             help={validationErrors?.itensIncluidos}
           >
             <Space direction="vertical" style={{ width: '100%' }} size="small">
-              {(formData.itensIncluidos || []).map((item, index) => (
-                <Tag
-                  key={index}
-                  closable
-                  onClose={() => handleRemoveItem(index)}
-                  style={{ marginBottom: 8 }}
-                >
-                  {item}
-                </Tag>
-              ))}
+              {(formData.itensIncluidos || []).length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {(formData.itensIncluidos || []).map((item, index) => (
+                    <Tag
+                      key={`item-${index}-${item}`}
+                      closable
+                      onClose={() => handleRemoveItem(index)}
+                      style={{ marginBottom: 0 }}
+                    >
+                      {item}
+                    </Tag>
+                  ))}
+                </div>
+              )}
               <Space.Compact style={{ width: '100%' }}>
                 <Input
                   placeholder="Digite um item e pressione Enter"
@@ -488,7 +514,7 @@ const Passeio = ({
                     <ClockCircleOutlined /> Duração:
                   </Text>
                   <Text style={{ fontSize: 14, color: '#262626' }}>
-                    {selectedPasseio.duracao}
+                    {formatDuracao(selectedPasseio.duracao)}
                   </Text>
                 </div>
               </Col>
@@ -765,7 +791,7 @@ const Passeio = ({
                     <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
                       <Tag>{passeio.categoriaDescricao || passeio.categoria}</Tag>
                       <Text style={{ fontSize: 12, color: '#8c8c8c' }}>
-                        <ClockCircleOutlined /> {passeio.duracao} HORAS
+                        <ClockCircleOutlined /> {formatDuracao(passeio.duracao)}
                       </Text>
                     </div>
                   </div>
