@@ -262,10 +262,10 @@ const Restaurante = ({
             name="tipoAcao"
             validateStatus={validationErrors?.tipoAcao ? 'error' : ''}
             help={validationErrors?.tipoAcao}
+            rules={[{ required: true, message: 'Por favor, selecione o tipo de ação!' }]}
           >
             <Select
               placeholder="Selecione o tipo de ação"
-              allowClear
               disabled={loading}
             >
               <Option value="FAZER_RESERVA">Fazer Reserva</Option>

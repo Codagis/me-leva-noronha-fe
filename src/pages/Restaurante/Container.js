@@ -91,12 +91,7 @@ const RestauranteContainer = () => {
       formDataToSend.append('descricao', finalValues.descricao);
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       formDataToSend.append('categoria', finalValues.categoria);
-      
-      if (finalValues.tipoAcao && finalValues.tipoAcao.trim() !== '') {
-        formDataToSend.append('tipoAcao', finalValues.tipoAcao);
-      } else if (editingRestaurante) {
-        formDataToSend.append('tipoAcao', '');
-      }
+      formDataToSend.append('tipoAcao', finalValues.tipoAcao || '');
       
       if (editingRestaurante) {
         if (formData.imagem) {
