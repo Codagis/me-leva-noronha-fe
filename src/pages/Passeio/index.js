@@ -59,27 +59,31 @@ const Passeio = ({
 
   useEffect(() => {
     if (showForm) {
-      if (!editingPasseio) {
-        form.resetFields();
-        setItemInput('');
-      } else if (editingPasseio) {
+      if (editingPasseio) {
+        const whatsappValue = editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || '';
         const values = {
           tag: editingPasseio.tag || '',
           titulo: editingPasseio.titulo || '',
           descricao: editingPasseio.descricao || '',
           duracao: editingPasseio.duracao || '',
           valor: editingPasseio.valor ? parseFloat(editingPasseio.valor) : undefined,
-          numeroWhatsapp: editingPasseio.linkWhatsapp || '',
+          numeroWhatsapp: whatsappValue,
           categoria: editingPasseio.categoria || 'AQUATICOS',
           topRanking: editingPasseio.topRanking || null,
         };
-        form.setFieldsValue(values);
+        form.resetFields();
+        setTimeout(() => {
+          form.setFieldsValue(values);
+        }, 100);
+      } else {
+        form.resetFields();
+        setItemInput('');
       }
     } else {
       form.resetFields();
       setItemInput('');
     }
-  }, [showForm, editingPasseio, form]);
+  }, [showForm, editingPasseio?.id, editingPasseio?.numeroWhatsapp, editingPasseio?.linkWhatsapp, form]);
 
   useEffect(() => {
     if (validationErrors && Object.keys(validationErrors).length > 0) {
@@ -208,22 +212,23 @@ const Passeio = ({
         styles={{
           body: { padding: '32px' }
         }}
+        forceRender
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleFormSubmit}
           preserve={false}
-          key={editingPasseio ? `edit-${editingPasseio.id}` : 'new'}
+          key={editingPasseio ? `edit-${editingPasseio.id}-${editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || ''}` : 'new'}
           initialValues={editingPasseio ? {
-            tag: editingPasseio.tag || formData.tag || '',
-            titulo: editingPasseio.titulo || formData.titulo || '',
-            descricao: editingPasseio.descricao || formData.descricao || '',
-            duracao: editingPasseio.duracao || formData.duracao || '',
-            valor: editingPasseio.valor ? parseFloat(editingPasseio.valor) : (formData.valor ? parseFloat(formData.valor) : undefined),
-            numeroWhatsapp: editingPasseio.linkWhatsapp || formData.numeroWhatsapp || '',
-            categoria: editingPasseio.categoria || formData.categoria || 'AQUATICOS',
-            topRanking: editingPasseio.topRanking || formData.topRanking || null,
+            tag: editingPasseio.tag || '',
+            titulo: editingPasseio.titulo || '',
+            descricao: editingPasseio.descricao || '',
+            duracao: editingPasseio.duracao || '',
+            valor: editingPasseio.valor ? parseFloat(editingPasseio.valor) : undefined,
+            numeroWhatsapp: editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || '',
+            categoria: editingPasseio.categoria || 'AQUATICOS',
+            topRanking: editingPasseio.topRanking || null,
           } : {
             tag: '',
             titulo: '',
@@ -587,7 +592,7 @@ const Passeio = ({
                 <WhatsAppOutlined /> WhatsApp:
               </Text>
               <a 
-                href={`https://wa.me/${selectedPasseio.linkWhatsapp}`} 
+                href={`https://wa.me/${selectedPasseio.numeroWhatsapp || selectedPasseio.linkWhatsapp}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{ 
@@ -596,7 +601,7 @@ const Passeio = ({
                   textDecoration: 'none'
                 }}
               >
-                {selectedPasseio.linkWhatsapp}
+                {selectedPasseio.numeroWhatsapp || selectedPasseio.linkWhatsapp}
               </a>
             </div>
 

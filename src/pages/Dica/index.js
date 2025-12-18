@@ -52,21 +52,25 @@ const Dica = ({
 
   useEffect(() => {
     if (showForm) {
-      if (!editingDica) {
-        form.resetFields();
-      } else if (editingDica) {
+      if (editingDica) {
+        const whatsappValue = editingDica.numeroWhatsapp || editingDica.linkWhatsapp || '';
         const values = {
           tag: editingDica.tag || '',
           titulo: editingDica.titulo || '',
           descricao: editingDica.descricao || '',
-          numeroWhatsapp: editingDica.linkWhatsapp || '',
+          numeroWhatsapp: whatsappValue,
         };
-        form.setFieldsValue(values);
+        form.resetFields();
+        setTimeout(() => {
+          form.setFieldsValue(values);
+        }, 100);
+      } else {
+        form.resetFields();
       }
     } else {
       form.resetFields();
     }
-  }, [showForm, editingDica, form]);
+  }, [showForm, editingDica?.id, editingDica?.numeroWhatsapp, editingDica?.linkWhatsapp, form]);
 
   useEffect(() => {
     if (validationErrors && Object.keys(validationErrors).length > 0) {
@@ -138,18 +142,19 @@ const Dica = ({
         styles={{
           body: { padding: '32px' }
         }}
+        forceRender
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleFormSubmit}
           preserve={false}
-          key={editingDica ? `edit-${editingDica.id}` : 'new'}
+          key={editingDica ? `edit-${editingDica.id}-${editingDica.numeroWhatsapp || editingDica.linkWhatsapp || ''}` : 'new'}
           initialValues={editingDica ? {
-            tag: editingDica.tag || formData.tag || '',
-            titulo: editingDica.titulo || formData.titulo || '',
-            descricao: editingDica.descricao || formData.descricao || '',
-            numeroWhatsapp: editingDica.linkWhatsapp || formData.numeroWhatsapp || '',
+            tag: editingDica.tag || '',
+            titulo: editingDica.titulo || '',
+            descricao: editingDica.descricao || '',
+            numeroWhatsapp: editingDica.numeroWhatsapp || editingDica.linkWhatsapp || '',
           } : {
             tag: '',
             titulo: '',
@@ -345,7 +350,7 @@ const Dica = ({
                 WhatsApp:
               </Text>
               <a 
-                href={`https://wa.me/${selectedDica.linkWhatsapp}`} 
+                href={`https://wa.me/${selectedDica.numeroWhatsapp || selectedDica.linkWhatsapp}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{ 
@@ -354,7 +359,7 @@ const Dica = ({
                   textDecoration: 'none'
                 }}
               >
-                {selectedDica.linkWhatsapp}
+                {selectedDica.numeroWhatsapp || selectedDica.linkWhatsapp}
               </a>
             </div>
             <Row gutter={20}>

@@ -19,7 +19,7 @@ const DicaContainer = () => {
     tag: '',
     titulo: '',
     descricao: '',
-    linkWhatsapp: '',
+    numeroWhatsapp: '',
     imagem: null,
     icone: null,
   });
@@ -175,7 +175,7 @@ const DicaContainer = () => {
       tag: dica.tag || '',
       titulo: dica.titulo || '',
       descricao: dica.descricao || '',
-      numeroWhatsapp: dica.linkWhatsapp || '',
+      numeroWhatsapp: dica.numeroWhatsapp || dica.linkWhatsapp || '',
       imagem: null,
       icone: null,
     });

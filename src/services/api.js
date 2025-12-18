@@ -1,5 +1,15 @@
 import API_BASE_URL from '../config/api';
 
+const handleUnauthorized = (response) => {
+  if (response.status === 401) {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    window.location.href = '/login';
+    return new Promise(() => {});
+  }
+  return null;
+};
+
 const api = {
   async request(endpoint, options = {}) {
     if (!API_BASE_URL) {
@@ -24,6 +34,11 @@ const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
     if (!response.ok) {
+      const unauthorizedResult = handleUnauthorized(response);
+      if (unauthorizedResult) {
+        return unauthorizedResult;
+      }
+      
       let errorMessage = 'Erro na requisição';
       const clonedResponse = response.clone();
       try {
@@ -92,6 +107,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao cadastrar dica';
         const clonedResponse = response.clone();
         try {
@@ -148,6 +168,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao atualizar dica';
         const clonedResponse = response.clone();
         try {
@@ -194,6 +219,10 @@ const api = {
     });
 
     if (!response.ok) {
+      const unauthorizedResult = handleUnauthorized(response);
+      if (unauthorizedResult) {
+        return unauthorizedResult;
+      }
       const error = await response.text();
       throw new Error(error || 'Erro ao excluir dica');
     }
@@ -223,6 +252,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao cadastrar vida noturna';
         const clonedResponse = response.clone();
         try {
@@ -271,6 +305,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao atualizar vida noturna';
         const clonedResponse = response.clone();
         try {
@@ -317,6 +356,10 @@ const api = {
     });
 
     if (!response.ok) {
+      const unauthorizedResult = handleUnauthorized(response);
+      if (unauthorizedResult) {
+        return unauthorizedResult;
+      }
       const error = await response.text();
       throw new Error(error || 'Erro ao excluir vida noturna');
     }
@@ -346,6 +389,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao cadastrar passeio';
         const clonedResponse = response.clone();
         try {
@@ -398,6 +446,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao atualizar passeio';
         const clonedResponse = response.clone();
         try {
@@ -444,6 +497,10 @@ const api = {
     });
 
     if (!response.ok) {
+      const unauthorizedResult = handleUnauthorized(response);
+      if (unauthorizedResult) {
+        return unauthorizedResult;
+      }
       const error = await response.text();
       throw new Error(error || 'Erro ao excluir passeio');
     }
@@ -476,6 +533,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao cadastrar restaurante';
         const clonedResponse = response.clone();
         try {
@@ -528,6 +590,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao atualizar restaurante';
         const clonedResponse = response.clone();
         try {
@@ -574,6 +641,10 @@ const api = {
     });
 
     if (!response.ok) {
+      const unauthorizedResult = handleUnauthorized(response);
+      if (unauthorizedResult) {
+        return unauthorizedResult;
+      }
       const error = await response.text();
       throw new Error(error || 'Erro ao excluir restaurante');
     }
@@ -603,6 +674,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao cadastrar ponto de interesse';
         const clonedResponse = response.clone();
         try {
@@ -648,6 +724,11 @@ const api = {
       });
 
       if (!response.ok) {
+        const unauthorizedResult = handleUnauthorized(response);
+        if (unauthorizedResult) {
+          return unauthorizedResult;
+        }
+        
         let errorMessage = 'Erro ao atualizar ponto de interesse';
         const clonedResponse = response.clone();
         try {
