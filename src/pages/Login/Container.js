@@ -14,13 +14,18 @@ const LoginContainer = () => {
     setError('');
     setLoading(true);
 
-    const finalUsername = formValues?.username || username;
-    const finalSenha = formValues?.senha || senha;
+    try {
+      const finalUsername = formValues?.username || username;
+      const finalSenha = formValues?.senha || senha;
 
-    const result = await login(finalUsername, finalSenha);
+      const result = await login(finalUsername, finalSenha);
 
-    if (!result.success) {
-      setError(result.error || 'Credenciais inválidas');
+      if (!result.success) {
+        setError(result.error || 'Credenciais inválidas');
+      }
+    } catch (error) {
+      setError(error.message || 'Erro ao fazer login. Tente novamente.');
+    } finally {
       setLoading(false);
     }
   };

@@ -1,7 +1,11 @@
 import API_BASE_URL from '../config/api';
 
-const handleUnauthorized = (response) => {
+const handleUnauthorized = (response, endpoint) => {
   if (response.status === 401) {
+    // Não redireciona se for a requisição de login (para permitir exibir mensagem de erro)
+    if (endpoint && endpoint.includes('/api/auth/login')) {
+      return null;
+    }
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     window.location.href = '/login';
@@ -34,7 +38,7 @@ const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
     if (!response.ok) {
-      const unauthorizedResult = handleUnauthorized(response);
+      const unauthorizedResult = handleUnauthorized(response, endpoint);
       if (unauthorizedResult) {
         return unauthorizedResult;
       }
@@ -107,7 +111,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, '/api/dicas');
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -168,7 +172,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, `/api/dicas/${id}`);
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -219,7 +223,7 @@ const api = {
     });
 
     if (!response.ok) {
-      const unauthorizedResult = handleUnauthorized(response);
+      const unauthorizedResult = handleUnauthorized(response, `/api/dicas/${id}`);
       if (unauthorizedResult) {
         return unauthorizedResult;
       }
@@ -252,7 +256,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, '/api/vida-noturna');
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -305,7 +309,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, `/api/vida-noturna/${id}`);
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -356,7 +360,7 @@ const api = {
     });
 
     if (!response.ok) {
-      const unauthorizedResult = handleUnauthorized(response);
+      const unauthorizedResult = handleUnauthorized(response, `/api/vida-noturna/${id}`);
       if (unauthorizedResult) {
         return unauthorizedResult;
       }
@@ -389,7 +393,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, '/api/passeios');
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -446,7 +450,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, `/api/passeios/${id}`);
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -497,7 +501,7 @@ const api = {
     });
 
     if (!response.ok) {
-      const unauthorizedResult = handleUnauthorized(response);
+      const unauthorizedResult = handleUnauthorized(response, `/api/passeios/${id}`);
       if (unauthorizedResult) {
         return unauthorizedResult;
       }
@@ -533,7 +537,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, '/api/restaurantes');
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -590,7 +594,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, `/api/restaurantes/${id}`);
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -641,7 +645,7 @@ const api = {
     });
 
     if (!response.ok) {
-      const unauthorizedResult = handleUnauthorized(response);
+      const unauthorizedResult = handleUnauthorized(response, `/api/restaurantes/${id}`);
       if (unauthorizedResult) {
         return unauthorizedResult;
       }
@@ -674,7 +678,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, '/api/pontos-interesse');
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
@@ -724,7 +728,7 @@ const api = {
       });
 
       if (!response.ok) {
-        const unauthorizedResult = handleUnauthorized(response);
+        const unauthorizedResult = handleUnauthorized(response, `/api/pontos-interesse/${id}`);
         if (unauthorizedResult) {
           return unauthorizedResult;
         }
