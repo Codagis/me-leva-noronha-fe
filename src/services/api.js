@@ -136,7 +136,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -146,7 +146,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -197,7 +197,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -207,7 +207,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -281,7 +281,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -334,7 +334,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -344,7 +344,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -418,7 +418,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -428,7 +428,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -475,7 +475,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -485,7 +485,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -562,7 +562,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -572,7 +572,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
@@ -619,7 +619,7 @@ const api = {
             errorMessage = errorText || errorMessage;
           } catch {
             if (response.status === 413) {
-              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 10 MB. Por favor, escolha um arquivo menor.';
+              errorMessage = 'O arquivo é muito grande. Tamanho máximo permitido: 50 MB. Por favor, escolha um arquivo menor.';
             }
           }
         }
@@ -629,7 +629,7 @@ const api = {
       return response.json();
     } catch (error) {
       if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.message.includes('NetworkError')) {
-        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 10 MB.');
+        throw new Error('Erro ao enviar arquivo. Verifique sua conexão ou se o arquivo não excede 50 MB.');
       }
       throw error;
     }
