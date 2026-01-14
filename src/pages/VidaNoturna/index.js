@@ -336,8 +336,9 @@ const VidaNoturna = ({
               }}
               onRemove={(file) => {
                 const currentFiles = formData.videos || [];
+                const fileIndex = parseInt(file.uid?.replace('video-', '') || '-1');
                 const newFiles = currentFiles.filter((f, index) => {
-                  return !(f.name === file.name && f.size === file.size);
+                  return index !== fileIndex;
                 });
                 onFileChange({ target: { name: 'videos', files: newFiles } });
               }}
