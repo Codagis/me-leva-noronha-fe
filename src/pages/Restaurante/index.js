@@ -14,7 +14,8 @@ import {
   Empty,
   Tag,
   Select,
-  Popconfirm
+  Popconfirm,
+  message
 } from 'antd';
 import { 
   ReloadOutlined, 
@@ -25,6 +26,7 @@ import {
   WhatsAppOutlined
 } from '@ant-design/icons';
 import ImageWithAuth from '../../components/ImageWithAuth';
+import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -53,14 +55,12 @@ const Restaurante = ({
   onRefresh,
 }) => {
   const [form] = Form.useForm();
-  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [selectedCardapioFile, setSelectedCardapioFile] = useState(null);
 
   useEffect(() => {
     if (showForm) {
       if (!editingRestaurante) {
         form.resetFields();
-        setSelectedImageFile(null);
         setSelectedCardapioFile(null);
       } else if (editingRestaurante) {
         const values = {
@@ -71,12 +71,10 @@ const Restaurante = ({
           tipoAcao: editingRestaurante.tipoAcao || null,
         };
         form.setFieldsValue(values);
-        setSelectedImageFile(null);
         setSelectedCardapioFile(null);
       }
     } else {
       form.resetFields();
-      setSelectedImageFile(null);
       setSelectedCardapioFile(null);
     }
   }, [showForm, editingRestaurante, form]);
@@ -274,30 +272,93 @@ const Restaurante = ({
           </Form.Item>
 
           <Form.Item
-            label={`Imagem ${editingRestaurante ? '(opcional)' : ''}`}
-            name="imagem"
-            rules={!editingRestaurante ? [{ required: true, message: 'Por favor, selecione uma imagem!' }] : []}
+            label={`Imagens ${editingRestaurante ? '(opcional)' : ''}`}
+            name="imagens"
+            validateStatus={validationErrors?.imagens ? 'error' : ''}
+            help={validationErrors?.imagens}
+            rules={!editingRestaurante ? [
+              { 
+                validator: (_, value) => {
+                  if (!formData.imagens || formData.imagens.length === 0) {
+                    return Promise.reject(new Error('Por favor, selecione pelo menos uma imagem!'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ] : []}
           >
             <Upload
               accept="image/*"
+              multiple
               beforeUpload={(file) => {
-                setSelectedImageFile(file);
-                onFileChange({ target: { name: 'imagem', files: [file] } });
+                const currentFiles = formData.imagens || [];
+                const newFiles = [...currentFiles, file];
+                onFileChange({ target: { name: 'imagens', files: newFiles } });
                 return false;
               }}
-              onRemove={() => {
-                setSelectedImageFile(null);
-                onFileChange({ target: { name: 'imagem', files: [] } });
+              onRemove={(file) => {
+                const currentFiles = formData.imagens || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'imagens', files: newFiles } });
               }}
-              maxCount={1}
               disabled={loading}
-              fileList={selectedImageFile ? [{
-                uid: '-1',
-                name: selectedImageFile.name,
+              fileList={formData.imagens?.map((file, index) => ({
+                uid: `-${index}`,
+                name: file.name,
                 status: 'done',
-              }] : []}
+              })) || []}
             >
-              <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
+              <Button icon={<UploadOutlined />}>Selecionar Imagens</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Vídeos (opcional)"
+            name="videos"
+          >
+            <Upload
+              accept="video/*,.wmv"
+              multiple
+              beforeUpload={(file) => {
+                // Permitir vídeos (incluindo WMV) - validar por extensão também
+                const fileName = file.name?.toLowerCase() || '';
+                const isVideo = file.type?.startsWith('video/') || 
+                               fileName.endsWith('.wmv') ||
+                               fileName.endsWith('.mp4') ||
+                               fileName.endsWith('.webm') ||
+                               fileName.endsWith('.avi') ||
+                               fileName.endsWith('.mov') ||
+                               fileName.endsWith('.mkv') ||
+                               fileName.endsWith('.flv') ||
+                               fileName.endsWith('.m4v');
+                
+                if (!isVideo) {
+                  message.error('Apenas arquivos de vídeo são permitidos (incluindo .wmv, .mp4, .webm, .avi, .mov, .mkv)');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                const currentFiles = formData.videos || [];
+                const newFiles = [...currentFiles, file];
+                onFileChange({ target: { name: 'videos', files: newFiles } });
+                return false;
+              }}
+              onRemove={(file) => {
+                const currentFiles = formData.videos || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'videos', files: newFiles } });
+              }}
+              disabled={loading}
+              fileList={formData.videos?.map((file, index) => ({
+                uid: `video-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
+            >
+              <Button icon={<UploadOutlined />}>Selecionar Vídeos</Button>
             </Upload>
           </Form.Item>
 
@@ -505,21 +566,57 @@ const Restaurante = ({
 
             <div>
               <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
-                Imagem:
+                Imagens:
               </Text>
-              <div style={{ 
-                borderRadius: 8, 
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <ImageWithAuth
-                  key={`img-${selectedRestaurante.id}`}
-                  src={selectedRestaurante.linkImagem}
-                  alt={selectedRestaurante.nome}
-                  style={{ width: '100%', display: 'block' }}
-                />
-              </div>
+              <Row gutter={[16, 16]}>
+                {selectedRestaurante.linkImagens && selectedRestaurante.linkImagens.length > 0 ? (
+                  selectedRestaurante.linkImagens.map((imagemUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <ImageWithAuth
+                          key={`img-${selectedRestaurante.id}-${index}`}
+                          src={imagemUrl}
+                          alt={`${selectedRestaurante.nome} - Imagem ${index + 1}`}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <Col span={24}>
+                    <Text style={{ color: '#8c8c8c' }}>Nenhuma imagem cadastrada</Text>
+                  </Col>
+                )}
+              </Row>
             </div>
+            {selectedRestaurante.linkVideos && selectedRestaurante.linkVideos.length > 0 && (
+              <div>
+                <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                  Vídeos:
+                </Text>
+                <Row gutter={[16, 16]}>
+                  {selectedRestaurante.linkVideos.map((videoUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <VideoWithAuth
+                          key={`video-${selectedRestaurante.id}-${index}`}
+                          src={videoUrl}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
           </Space>
         )}
       </Modal>
@@ -575,16 +672,30 @@ const Restaurante = ({
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                   >
-                    <ImageWithAuth
-                      key={`${restaurante.id}-${imageRefreshKey}`}
-                      src={restaurante.linkImagem}
-                      alt={restaurante.nome}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover'
-                      }}
-                    />
+                    {restaurante.linkImagens && restaurante.linkImagens.length > 0 ? (
+                      <ImageWithAuth
+                        key={`${restaurante.id}-${imageRefreshKey}`}
+                        src={restaurante.linkImagens[0]}
+                        alt={restaurante.nome}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#8c8c8c'
+                      }}>
+                        Sem imagem
+                      </div>
+                    )}
                   </div>
                   <div style={{
                     position: 'absolute',

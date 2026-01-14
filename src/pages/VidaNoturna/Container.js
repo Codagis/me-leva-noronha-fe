@@ -21,7 +21,8 @@ const VidaNoturnaContainer = () => {
     horarioFuncionamento: '',
     numeroWhatsapp: '',
     linkGoogleMaps: '',
-    imagem: null,
+    imagens: [],
+    videos: [],
   });
 
   useEffect(() => {
@@ -50,10 +51,14 @@ const VidaNoturnaContainer = () => {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files[0] || null,
-    }));
+    if (name === 'imagens' || name === 'videos') {
+      // Para múltiplas imagens/vídeos, manter todas as selecionadas
+      const fileArray = Array.from(files || []);
+      setFormData(prev => ({
+        ...prev,
+        [name]: fileArray,
+      }));
+    }
   };
 
   const resetFormData = () => {
@@ -64,7 +69,8 @@ const VidaNoturnaContainer = () => {
       horarioFuncionamento: '',
       numeroWhatsapp: '',
       linkGoogleMaps: '',
-      imagem: null,
+      imagens: [],
+      videos: [],
     });
   };
 
@@ -90,14 +96,24 @@ const VidaNoturnaContainer = () => {
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       formDataToSend.append('linkGoogleMaps', finalValues.linkGoogleMaps);
       
+      // Adicionar múltiplas imagens
+      if (formData.imagens && formData.imagens.length > 0) {
+        formData.imagens.forEach((imagem) => {
+          formDataToSend.append('imagens', imagem);
+        });
+      }
+      
+      // Adicionar múltiplos vídeos
+      if (formData.videos && formData.videos.length > 0) {
+        formData.videos.forEach((video) => {
+          formDataToSend.append('videos', video);
+        });
+      }
+      
       if (editingVidaNoturna) {
-        if (formData.imagem) {
-          formDataToSend.append('imagem', formData.imagem);
-        }
         await api.atualizarVidaNoturna(editingVidaNoturna.id, formDataToSend);
         showSuccess('Estabelecimento atualizado com sucesso!');
       } else {
-        formDataToSend.append('imagem', formData.imagem);
         await api.cadastrarVidaNoturna(formDataToSend);
         showSuccess('Estabelecimento cadastrado com sucesso!');
       }
@@ -176,7 +192,8 @@ const VidaNoturnaContainer = () => {
       horarioFuncionamento: vidaNoturna.horarioFuncionamento || '',
       numeroWhatsapp: vidaNoturna.numeroWhatsapp || '',
       linkGoogleMaps: vidaNoturna.linkGoogleMaps || '',
-      imagem: null,
+      imagens: [],
+      videos: [],
     });
     setShowForm(true);
   };

@@ -12,7 +12,8 @@ import {
   Spin,
   Empty,
   Tag,
-  Popconfirm
+  Popconfirm,
+  message
 } from 'antd';
 import { useEffect } from 'react';
 import { 
@@ -24,6 +25,7 @@ import {
   UploadOutlined
 } from '@ant-design/icons';
 import ImageWithAuth from '../../components/ImageWithAuth';
+import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -227,20 +229,92 @@ const Dica = ({
           </Form.Item>
 
           <Form.Item
-            label={`Imagem ${editingDica ? '(opcional)' : ''}`}
-            name="imagem"
-            rules={!editingDica ? [{ required: true, message: 'Por favor, selecione uma imagem!' }] : []}
+            label={`Imagens ${editingDica ? '(opcional)' : ''}`}
+            name="imagens"
+            validateStatus={validationErrors?.imagens ? 'error' : ''}
+            help={validationErrors?.imagens}
+            rules={!editingDica ? [
+              { 
+                validator: (_, value) => {
+                  if (!formData.imagens || formData.imagens.length === 0) {
+                    return Promise.reject(new Error('Por favor, selecione pelo menos uma imagem!'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ] : []}
           >
             <Upload
               accept="image/*"
+              multiple
               beforeUpload={(file) => {
-                onFileChange({ target: { name: 'imagem', files: [file] } });
+                const currentFiles = formData.imagens || [];
+                onFileChange({ target: { name: 'imagens', files: [...currentFiles, file] } });
                 return false;
               }}
-              maxCount={1}
+              onRemove={(file) => {
+                const currentFiles = formData.imagens || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  // Comparar por nome e tamanho para identificar o arquivo
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'imagens', files: newFiles } });
+              }}
+              fileList={formData.imagens?.map((file, index) => ({
+                uid: `-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
               disabled={loading}
             >
-              <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
+              <Button icon={<UploadOutlined />}>Selecionar Imagens</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Vídeos (opcional)"
+            name="videos"
+          >
+            <Upload
+              accept="video/*,.wmv"
+              multiple
+              beforeUpload={(file) => {
+                // Permitir vídeos (incluindo WMV) - validar por extensão também
+                const fileName = file.name?.toLowerCase() || '';
+                const isVideo = file.type?.startsWith('video/') || 
+                               fileName.endsWith('.wmv') ||
+                               fileName.endsWith('.mp4') ||
+                               fileName.endsWith('.webm') ||
+                               fileName.endsWith('.avi') ||
+                               fileName.endsWith('.mov') ||
+                               fileName.endsWith('.mkv') ||
+                               fileName.endsWith('.flv') ||
+                               fileName.endsWith('.m4v');
+                
+                if (!isVideo) {
+                  message.error('Apenas arquivos de vídeo são permitidos (incluindo .wmv, .mp4, .webm, .avi, .mov, .mkv)');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                const currentFiles = formData.videos || [];
+                onFileChange({ target: { name: 'videos', files: [...currentFiles, file] } });
+                return false;
+              }}
+              onRemove={(file) => {
+                const currentFiles = formData.videos || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'videos', files: newFiles } });
+              }}
+              fileList={formData.videos?.map((file, index) => ({
+                uid: `video-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
+              disabled={loading}
+            >
+              <Button icon={<UploadOutlined />}>Selecionar Vídeos</Button>
             </Upload>
           </Form.Item>
 
@@ -362,47 +436,77 @@ const Dica = ({
                 {selectedDica.numeroWhatsapp || selectedDica.linkWhatsapp}
               </a>
             </div>
-            <Row gutter={20}>
-              <Col span={12}>
-                <div>
-                  <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
-                    Imagem:
-                  </Text>
-                  <div style={{ 
-                    borderRadius: 8, 
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}>
-                    <ImageWithAuth
-                      key={`img-${selectedDica.id}`}
-                      src={selectedDica.linkImagem}
-                      alt={selectedDica.titulo}
-                      style={{ width: '100%', display: 'block' }}
-                    />
-                  </div>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div>
-                  <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
-                    Ícone:
-                  </Text>
-                  <div style={{ 
-                    borderRadius: 8, 
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    display: 'inline-block'
-                  }}>
-                    <ImageWithAuth
-                      key={`icon-${selectedDica.id}`}
-                      src={selectedDica.linkIcone}
-                      alt={`Ícone ${selectedDica.titulo}`}
-                      style={{ width: '100%', maxWidth: 200, display: 'block' }}
-                    />
-                  </div>
-                </div>
-              </Col>
-            </Row>
+            <div>
+              <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                Imagens:
+              </Text>
+              <Row gutter={[16, 16]}>
+                {selectedDica.linkImagens && selectedDica.linkImagens.length > 0 ? (
+                  selectedDica.linkImagens.map((imagemUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <ImageWithAuth
+                          key={`img-${selectedDica.id}-${index}`}
+                          src={imagemUrl}
+                          alt={`${selectedDica.titulo} - Imagem ${index + 1}`}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <Col span={24}>
+                    <Text style={{ color: '#8c8c8c' }}>Nenhuma imagem cadastrada</Text>
+                  </Col>
+                )}
+              </Row>
+            </div>
+            {selectedDica.linkVideos && selectedDica.linkVideos.length > 0 && (
+              <div>
+                <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                  Vídeos:
+                </Text>
+                <Row gutter={[16, 16]}>
+                  {selectedDica.linkVideos.map((videoUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <VideoWithAuth
+                          key={`video-${selectedDica.id}-${index}`}
+                          src={videoUrl}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+            <div>
+              <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                Ícone:
+              </Text>
+              <div style={{ 
+                borderRadius: 8, 
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                display: 'inline-block'
+              }}>
+                <ImageWithAuth
+                  key={`icon-${selectedDica.id}`}
+                  src={selectedDica.linkIcone}
+                  alt={`Ícone ${selectedDica.titulo}`}
+                  style={{ width: '100%', maxWidth: 200, display: 'block' }}
+                />
+              </div>
+            </div>
           </Space>
         )}
       </Modal>
@@ -458,16 +562,30 @@ const Dica = ({
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                   >
-                    <ImageWithAuth
-                      key={`${dica.id}-${imageRefreshKey}`}
-                      src={dica.linkImagem}
-                      alt={dica.titulo}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover'
-                      }}
-                    />
+                    {dica.linkImagens && dica.linkImagens.length > 0 ? (
+                      <ImageWithAuth
+                        key={`${dica.id}-${imageRefreshKey}`}
+                        src={dica.linkImagens[0]}
+                        alt={dica.titulo}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#8c8c8c'
+                      }}>
+                        Sem imagem
+                      </div>
+                    )}
                   </div>
                   <div style={{
                     position: 'absolute',

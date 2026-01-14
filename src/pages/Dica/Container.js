@@ -20,7 +20,8 @@ const DicaContainer = () => {
     titulo: '',
     descricao: '',
     numeroWhatsapp: '',
-    imagem: null,
+    imagens: [],
+    videos: [],
     icone: null,
   });
 
@@ -50,10 +51,20 @@ const DicaContainer = () => {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files[0] || null,
-    }));
+    if (name === 'imagens' || name === 'videos') {
+      // Para múltiplas imagens/vídeos, manter todas as selecionadas
+      const fileArray = Array.from(files || []);
+      setFormData(prev => ({
+        ...prev,
+        [name]: fileArray,
+      }));
+    } else {
+      // Para ícone, manter apenas um arquivo
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0] || null,
+      }));
+    }
   };
 
   const resetFormData = () => {
@@ -62,7 +73,8 @@ const DicaContainer = () => {
       titulo: '',
       descricao: '',
       numeroWhatsapp: '',
-      imagem: null,
+      imagens: [],
+      videos: [],
       icone: null,
     });
   };
@@ -87,18 +99,28 @@ const DicaContainer = () => {
       formDataToSend.append('descricao', finalValues.descricao || '');
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       
+      // Adicionar múltiplas imagens
+      if (formData.imagens && formData.imagens.length > 0) {
+        formData.imagens.forEach((imagem) => {
+          formDataToSend.append('imagens', imagem);
+        });
+      }
+      
+      // Adicionar múltiplos vídeos
+      if (formData.videos && formData.videos.length > 0) {
+        formData.videos.forEach((video) => {
+          formDataToSend.append('videos', video);
+        });
+      }
+      
+      if (formData.icone) {
+        formDataToSend.append('icone', formData.icone);
+      }
+      
       if (editingDica) {
-        if (formData.imagem) {
-          formDataToSend.append('imagem', formData.imagem);
-        }
-        if (formData.icone) {
-          formDataToSend.append('icone', formData.icone);
-        }
         await api.atualizarDica(editingDica.id, formDataToSend);
         showSuccess('Dica atualizada com sucesso!');
       } else {
-        formDataToSend.append('imagem', formData.imagem);
-        formDataToSend.append('icone', formData.icone);
         await api.cadastrarDica(formDataToSend);
         showSuccess('Dica cadastrada com sucesso!');
       }
@@ -176,7 +198,8 @@ const DicaContainer = () => {
       titulo: dica.titulo || '',
       descricao: dica.descricao || '',
       numeroWhatsapp: dica.numeroWhatsapp || dica.linkWhatsapp || '',
-      imagem: null,
+      imagens: [],
+      videos: [],
       icone: null,
     });
     setShowForm(true);

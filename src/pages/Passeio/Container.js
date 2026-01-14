@@ -24,7 +24,9 @@ const PasseioContainer = () => {
     numeroWhatsapp: '',
     categoria: 'AQUATICOS',
     topRanking: null,
-    imagem: null,
+    imagens: [],
+    videos: [],
+    perguntasRespostas: [],
   });
 
   useEffect(() => {
@@ -53,10 +55,14 @@ const PasseioContainer = () => {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files[0] || null,
-    }));
+    if (name === 'imagens' || name === 'videos') {
+      // Para múltiplas imagens/vídeos, manter todas as selecionadas
+      const fileArray = Array.from(files || []);
+      setFormData(prev => ({
+        ...prev,
+        [name]: fileArray,
+      }));
+    }
   };
 
   const handleItensIncluidosChange = (itens) => {
@@ -117,14 +123,34 @@ const PasseioContainer = () => {
         formDataToSend.append('itensIncluidos', item);
       });
       
+      // Adicionar múltiplas imagens
+      if (formData.imagens && formData.imagens.length > 0) {
+        formData.imagens.forEach((imagem) => {
+          formDataToSend.append('imagens', imagem);
+        });
+      }
+      
+      // Adicionar múltiplos vídeos
+      if (formData.videos && formData.videos.length > 0) {
+        formData.videos.forEach((video) => {
+          formDataToSend.append('videos', video);
+        });
+      }
+      
+      // Adicionar perguntas e respostas
+      if (formData.perguntasRespostas && formData.perguntasRespostas.length > 0) {
+        formData.perguntasRespostas.forEach((pr, index) => {
+          if (pr.pergunta && pr.resposta) {
+            formDataToSend.append(`perguntasRespostas[${index}].pergunta`, pr.pergunta);
+            formDataToSend.append(`perguntasRespostas[${index}].resposta`, pr.resposta);
+          }
+        });
+      }
+      
       if (editingPasseio) {
-        if (formData.imagem) {
-          formDataToSend.append('imagem', formData.imagem);
-        }
         await api.atualizarPasseio(editingPasseio.id, formDataToSend);
         showSuccess('Passeio atualizado com sucesso!');
       } else {
-        formDataToSend.append('imagem', formData.imagem);
         await api.cadastrarPasseio(formDataToSend);
         showSuccess('Passeio cadastrado com sucesso!');
       }
@@ -139,7 +165,9 @@ const PasseioContainer = () => {
         numeroWhatsapp: '',
         categoria: 'AQUATICOS',
         topRanking: null,
-        imagem: null,
+        imagens: [],
+        videos: [],
+        perguntasRespostas: [],
       });
       setShowForm(false);
       setEditingPasseio(null);
@@ -199,7 +227,8 @@ const PasseioContainer = () => {
       numeroWhatsapp: '',
       categoria: 'AQUATICOS',
       topRanking: null,
-      imagem: null,
+      imagens: [],
+      perguntasRespostas: [],
     });
   };
 
@@ -236,9 +265,18 @@ const PasseioContainer = () => {
       numeroWhatsapp: passeio.numeroWhatsapp || passeio.linkWhatsapp || '',
       categoria: passeio.categoria || 'AQUATICOS',
       topRanking: passeio.topRanking || null,
-      imagem: null,
+      imagens: [],
+      videos: [],
+      perguntasRespostas: passeio.perguntasRespostas || [],
     });
     setShowForm(true);
+  };
+
+  const handlePerguntasRespostasChange = (perguntasRespostas) => {
+    setFormData(prev => ({
+      ...prev,
+      perguntasRespostas: perguntasRespostas,
+    }));
   };
 
   const handleDelete = async (passeio) => {
@@ -270,6 +308,7 @@ const PasseioContainer = () => {
         onInputChange={handleInputChange}
         onFileChange={handleFileChange}
         onItensIncluidosChange={handleItensIncluidosChange}
+        onPerguntasRespostasChange={handlePerguntasRespostasChange}
         onSubmit={handleSubmit}
         onShowForm={handleShowForm}
         onCloseForm={handleCloseForm}

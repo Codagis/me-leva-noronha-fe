@@ -15,7 +15,8 @@ import {
   Tag,
   Popconfirm,
   Select,
-  InputNumber
+  InputNumber,
+  message
 } from 'antd';
 import { 
   ReloadOutlined, 
@@ -28,6 +29,7 @@ import {
   DollarOutlined
 } from '@ant-design/icons';
 import ImageWithAuth from '../../components/ImageWithAuth';
+import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -45,6 +47,7 @@ const Passeio = ({
   onInputChange,
   onFileChange,
   onItensIncluidosChange,
+  onPerguntasRespostasChange,
   onSubmit,
   onShowForm,
   onCloseForm,
@@ -56,6 +59,8 @@ const Passeio = ({
 }) => {
   const [form] = Form.useForm();
   const [itemInput, setItemInput] = useState('');
+  const [perguntaInput, setPerguntaInput] = useState('');
+  const [respostaInput, setRespostaInput] = useState('');
 
   useEffect(() => {
     if (showForm) {
@@ -70,6 +75,7 @@ const Passeio = ({
           numeroWhatsapp: whatsappValue,
           categoria: editingPasseio.categoria || 'AQUATICOS',
           topRanking: editingPasseio.topRanking || null,
+          perguntasRespostas: editingPasseio.perguntasRespostas || [],
         };
         form.resetFields();
         setTimeout(() => {
@@ -135,6 +141,23 @@ const Passeio = ({
   const handleRemoveItem = (indexToRemove) => {
     const newItems = (formData.itensIncluidos || []).filter((_, i) => i !== indexToRemove);
     onItensIncluidosChange(newItems);
+  };
+
+  const handleAddPerguntaResposta = () => {
+    if (perguntaInput.trim() && respostaInput.trim()) {
+      const newPR = [...(formData.perguntasRespostas || []), {
+        pergunta: perguntaInput.trim(),
+        resposta: respostaInput.trim()
+      }];
+      onPerguntasRespostasChange(newPR);
+      setPerguntaInput('');
+      setRespostaInput('');
+    }
+  };
+
+  const handleRemovePerguntaResposta = (indexToRemove) => {
+    const newPR = (formData.perguntasRespostas || []).filter((_, i) => i !== indexToRemove);
+    onPerguntasRespostasChange(newPR);
   };
 
   const formatCurrency = (value) => {
@@ -220,7 +243,7 @@ const Passeio = ({
           onFinish={handleFormSubmit}
           preserve={false}
           key={editingPasseio ? `edit-${editingPasseio.id}-${editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || ''}` : 'new'}
-          initialValues={editingPasseio ? {
+            initialValues={editingPasseio ? {
             tag: editingPasseio.tag || '',
             titulo: editingPasseio.titulo || '',
             descricao: editingPasseio.descricao || '',
@@ -229,6 +252,7 @@ const Passeio = ({
             numeroWhatsapp: editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || '',
             categoria: editingPasseio.categoria || 'AQUATICOS',
             topRanking: editingPasseio.topRanking || null,
+            perguntasRespostas: editingPasseio.perguntasRespostas || [],
           } : {
             tag: '',
             titulo: '',
@@ -238,6 +262,7 @@ const Passeio = ({
             numeroWhatsapp: '',
             categoria: 'AQUATICOS',
             topRanking: null,
+            perguntasRespostas: [],
           }}
         >
           <Form.Item
@@ -410,21 +435,169 @@ const Passeio = ({
           </Row>
 
           <Form.Item
-            label={`Imagem ${editingPasseio ? '(opcional)' : ''}`}
-            name="imagem"
-            rules={!editingPasseio ? [{ required: true, message: 'Por favor, selecione uma imagem!' }] : []}
+            label={`Imagens ${editingPasseio ? '(opcional)' : ''}`}
+            name="imagens"
+            validateStatus={validationErrors?.imagens ? 'error' : ''}
+            help={validationErrors?.imagens}
+            rules={!editingPasseio ? [
+              { 
+                validator: (_, value) => {
+                  if (!formData.imagens || formData.imagens.length === 0) {
+                    return Promise.reject(new Error('Por favor, selecione pelo menos uma imagem!'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ] : []}
           >
             <Upload
               accept="image/*"
+              multiple
               beforeUpload={(file) => {
-                onFileChange({ target: { name: 'imagem', files: [file] } });
+                const currentFiles = formData.imagens || [];
+                onFileChange({ target: { name: 'imagens', files: [...currentFiles, file] } });
                 return false;
               }}
-              maxCount={1}
+              onRemove={(file) => {
+                const currentFiles = formData.imagens || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'imagens', files: newFiles } });
+              }}
+              fileList={formData.imagens?.map((file, index) => ({
+                uid: `-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
               disabled={loading}
             >
-              <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
+              <Button icon={<UploadOutlined />}>Selecionar Imagens</Button>
             </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Vídeos (opcional)"
+            name="videos"
+          >
+            <Upload
+              accept="video/*,.wmv"
+              multiple
+              beforeUpload={(file) => {
+                // Permitir vídeos (incluindo WMV) - validar por extensão também
+                const fileName = file.name?.toLowerCase() || '';
+                const isVideo = file.type?.startsWith('video/') || 
+                               fileName.endsWith('.wmv') ||
+                               fileName.endsWith('.mp4') ||
+                               fileName.endsWith('.webm') ||
+                               fileName.endsWith('.avi') ||
+                               fileName.endsWith('.mov') ||
+                               fileName.endsWith('.mkv') ||
+                               fileName.endsWith('.flv') ||
+                               fileName.endsWith('.m4v');
+                
+                if (!isVideo) {
+                  message.error('Apenas arquivos de vídeo são permitidos (incluindo .wmv, .mp4, .webm, .avi, .mov, .mkv)');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                const currentFiles = formData.videos || [];
+                onFileChange({ target: { name: 'videos', files: [...currentFiles, file] } });
+                return false;
+              }}
+              onRemove={(file) => {
+                const currentFiles = formData.videos || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'videos', files: newFiles } });
+              }}
+              fileList={formData.videos?.map((file, index) => ({
+                uid: `video-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
+              disabled={loading}
+            >
+              <Button icon={<UploadOutlined />}>Selecionar Vídeos</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Perguntas e Respostas (opcional)"
+            name="perguntasRespostas"
+          >
+            <Space direction="vertical" style={{ width: '100%' }} size="small">
+              {(formData.perguntasRespostas || []).length > 0 && (
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 12,
+                  padding: '12px',
+                  background: '#fafafa',
+                  borderRadius: 6,
+                  marginBottom: 8
+                }}>
+                  {(formData.perguntasRespostas || []).map((pr, index) => (
+                    <div
+                      key={`pr-${index}`}
+                      style={{
+                        padding: '12px',
+                        background: '#ffffff',
+                        borderRadius: 4,
+                        border: '1px solid #e8e8e8',
+                        position: 'relative'
+                      }}
+                    >
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleRemovePerguntaResposta(index)}
+                        style={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8
+                        }}
+                      />
+                      <div style={{ paddingRight: 32 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                          {pr.pergunta}
+                        </Text>
+                        <Text style={{ color: '#595959', fontSize: 13 }}>
+                          {pr.resposta}
+                        </Text>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Space direction="vertical" style={{ width: '100%' }} size="small">
+                <TextArea
+                  placeholder="Digite a pergunta"
+                  value={perguntaInput}
+                  onChange={(e) => setPerguntaInput(e.target.value)}
+                  rows={2}
+                  disabled={loading}
+                />
+                <TextArea
+                  placeholder="Digite a resposta"
+                  value={respostaInput}
+                  onChange={(e) => setRespostaInput(e.target.value)}
+                  rows={3}
+                  disabled={loading}
+                />
+                <Button 
+                  onClick={handleAddPerguntaResposta} 
+                  disabled={loading || !perguntaInput.trim() || !respostaInput.trim()}
+                  type="dashed"
+                  block
+                >
+                  Adicionar Pergunta e Resposta
+                </Button>
+              </Space>
+            </Space>
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
@@ -582,6 +755,43 @@ const Passeio = ({
               </div>
             )}
 
+            {selectedPasseio.perguntasRespostas && selectedPasseio.perguntasRespostas.length > 0 && (
+              <div>
+                <Text strong style={{ fontSize: 16, color: '#262626', display: 'block', marginBottom: 16 }}>
+                  Perguntas Frequentes:
+                </Text>
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  {selectedPasseio.perguntasRespostas.map((pr, index) => (
+                    <div
+                      key={`pr-${index}`}
+                      style={{
+                        padding: '16px',
+                        background: '#fafafa',
+                        borderRadius: 6,
+                        border: '1px solid #e8e8e8'
+                      }}
+                    >
+                      <Text strong style={{ 
+                        fontSize: 15, 
+                        color: '#262626', 
+                        display: 'block', 
+                        marginBottom: 8 
+                      }}>
+                        {pr.pergunta}
+                      </Text>
+                      <Text style={{ 
+                        color: '#595959', 
+                        fontSize: 14,
+                        lineHeight: 1.6
+                      }}>
+                        {pr.resposta}
+                      </Text>
+                    </div>
+                  ))}
+                </Space>
+              </div>
+            )}
+
             <div style={{ 
               padding: '12px 16px', 
               background: '#f0f7ff', 
@@ -607,21 +817,57 @@ const Passeio = ({
 
             <div>
               <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
-                Imagem:
+                Imagens:
               </Text>
-              <div style={{ 
-                borderRadius: 8, 
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <ImageWithAuth
-                  key={`img-${selectedPasseio.id}`}
-                  src={selectedPasseio.linkImagem}
-                  alt={selectedPasseio.titulo}
-                  style={{ width: '100%', display: 'block' }}
-                />
-              </div>
+              <Row gutter={[16, 16]}>
+                {selectedPasseio.linkImagens && selectedPasseio.linkImagens.length > 0 ? (
+                  selectedPasseio.linkImagens.map((imagemUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <ImageWithAuth
+                          key={`img-${selectedPasseio.id}-${index}`}
+                          src={imagemUrl}
+                          alt={`${selectedPasseio.titulo} - Imagem ${index + 1}`}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <Col span={24}>
+                    <Text style={{ color: '#8c8c8c' }}>Nenhuma imagem cadastrada</Text>
+                  </Col>
+                )}
+              </Row>
             </div>
+            {selectedPasseio.linkVideos && selectedPasseio.linkVideos.length > 0 && (
+              <div>
+                <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                  Vídeos:
+                </Text>
+                <Row gutter={[16, 16]}>
+                  {selectedPasseio.linkVideos.map((videoUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <VideoWithAuth
+                          key={`video-${selectedPasseio.id}-${index}`}
+                          src={videoUrl}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
           </Space>
         )}
       </Modal>
@@ -677,16 +923,30 @@ const Passeio = ({
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                   >
-                    <ImageWithAuth
-                      key={`${passeio.id}-${imageRefreshKey}`}
-                      src={passeio.linkImagem}
-                      alt={passeio.titulo}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover'
-                      }}
-                    />
+                    {passeio.linkImagens && passeio.linkImagens.length > 0 ? (
+                      <ImageWithAuth
+                        key={`${passeio.id}-${imageRefreshKey}`}
+                        src={passeio.linkImagens[0]}
+                        alt={passeio.titulo}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#8c8c8c'
+                      }}>
+                        Sem imagem
+                      </div>
+                    )}
                   </div>
                   <div style={{
                     position: 'absolute',

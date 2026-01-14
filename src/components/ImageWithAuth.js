@@ -8,6 +8,7 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
   useEffect(() => {
     if (!src) {
       setError(true);
+      setImageSrc(null);
       return;
     }
 
@@ -16,17 +17,23 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
 
     const loadImage = async () => {
       try {
+        let imageUrl = src;
+        
+        // Se a URL já é completa (Google Cloud Storage ou outra URL externa), usar diretamente
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          // URLs do Google Cloud Storage e outras URLs externas são públicas, usar diretamente
+          setImageSrc(imageUrl);
+          return;
+        }
+        
+        // Para URLs relativas, usar a API com autenticação
         if (!API_BASE_URL) {
           throw new Error('API_BASE_URL não está configurada.');
         }
 
         const token = localStorage.getItem('accessToken');
         
-        let imageUrl = src;
-        
-        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-          imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
-        }
+        imageUrl = `${API_BASE_URL}${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
         
         if (process.env.NODE_ENV === 'production' && imageUrl.startsWith('http://')) {
           imageUrl = imageUrl.replace('http://', 'https://');
@@ -65,7 +72,10 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
     };
   }, [src]);
 
-  if (error || !imageSrc) {
+  // Se imageSrc não foi definido mas src é uma URL externa válida, usar src diretamente
+  const finalSrc = imageSrc || (src && (src.startsWith('http://') || src.startsWith('https://')) ? src : null);
+  
+  if (error || !finalSrc) {
     return (
       <div className={className} style={{ 
         display: 'flex', 
@@ -73,14 +83,16 @@ const ImageWithAuth = ({ src, alt, className, ...props }) => {
         justifyContent: 'center',
         backgroundColor: '#f5f5f5',
         color: '#999',
-        fontSize: '12px'
+        fontSize: '12px',
+        minHeight: '100px',
+        ...props.style
       }}>
         Sem imagem
       </div>
     );
   }
 
-  return <img src={imageSrc} alt={alt} className={className} {...props} />;
+  return <img src={finalSrc} alt={alt} className={className} {...props} />;
 };
 
 export default ImageWithAuth;

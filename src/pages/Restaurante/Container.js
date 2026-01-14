@@ -20,7 +20,8 @@ const RestauranteContainer = () => {
     descricao: '',
     numeroWhatsapp: '',
     categoria: 'ECONOMICO',
-    imagem: null,
+    imagens: [],
+    videos: [],
     cardapio: null,
     tipoAcao: null,
   });
@@ -51,10 +52,20 @@ const RestauranteContainer = () => {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files[0] || null,
-    }));
+    if (name === 'imagens' || name === 'videos') {
+      // Para múltiplas imagens/vídeos, manter todas as selecionadas
+      const fileArray = Array.from(files || []);
+      setFormData(prev => ({
+        ...prev,
+        [name]: fileArray,
+      }));
+    } else {
+      // Para cardápio, manter apenas um arquivo
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0] || null,
+      }));
+    }
   };
 
   const handleCategoriaFiltroChange = (value) => {
@@ -67,7 +78,8 @@ const RestauranteContainer = () => {
       descricao: '',
       numeroWhatsapp: '',
       categoria: 'ECONOMICO',
-      imagem: null,
+      imagens: [],
+      videos: [],
       cardapio: null,
       tipoAcao: null,
     });
@@ -93,20 +105,28 @@ const RestauranteContainer = () => {
       formDataToSend.append('categoria', finalValues.categoria);
       formDataToSend.append('tipoAcao', finalValues.tipoAcao || '');
       
+      // Adicionar múltiplas imagens
+      if (formData.imagens && formData.imagens.length > 0) {
+        formData.imagens.forEach((imagem) => {
+          formDataToSend.append('imagens', imagem);
+        });
+      }
+      
+      // Adicionar múltiplos vídeos
+      if (formData.videos && formData.videos.length > 0) {
+        formData.videos.forEach((video) => {
+          formDataToSend.append('videos', video);
+        });
+      }
+      
+      if (formData.cardapio) {
+        formDataToSend.append('cardapio', formData.cardapio);
+      }
+      
       if (editingRestaurante) {
-        if (formData.imagem) {
-          formDataToSend.append('imagem', formData.imagem);
-        }
-        if (formData.cardapio) {
-          formDataToSend.append('cardapio', formData.cardapio);
-        }
         await api.atualizarRestaurante(editingRestaurante.id, formDataToSend);
         showSuccess('Restaurante atualizado com sucesso!');
       } else {
-        formDataToSend.append('imagem', formData.imagem);
-        if (formData.cardapio) {
-          formDataToSend.append('cardapio', formData.cardapio);
-        }
         await api.cadastrarRestaurante(formDataToSend);
         showSuccess('Restaurante cadastrado com sucesso!');
       }
@@ -183,7 +203,8 @@ const RestauranteContainer = () => {
       descricao: restaurante.descricao || '',
       numeroWhatsapp: restaurante.numeroWhatsapp || '',
       categoria: restaurante.categoria || 'ECONOMICO',
-      imagem: null,
+      imagens: [],
+      videos: [],
       cardapio: null,
       tipoAcao: restaurante.tipoAcao || null,
     });

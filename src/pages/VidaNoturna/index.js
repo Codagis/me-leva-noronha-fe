@@ -12,7 +12,8 @@ import {
   Spin,
   Empty,
   Tag,
-  Popconfirm
+  Popconfirm,
+  message
 } from 'antd';
 import { useEffect } from 'react';
 import { 
@@ -27,6 +28,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons';
 import ImageWithAuth from '../../components/ImageWithAuth';
+import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -262,20 +264,91 @@ const VidaNoturna = ({
           </Form.Item>
 
           <Form.Item
-            label={`Imagem ${editingVidaNoturna ? '(opcional)' : ''}`}
-            name="imagem"
-            rules={!editingVidaNoturna ? [{ required: true, message: 'Por favor, selecione uma imagem!' }] : []}
+            label={`Imagens ${editingVidaNoturna ? '(opcional)' : ''}`}
+            name="imagens"
+            validateStatus={validationErrors?.imagens ? 'error' : ''}
+            help={validationErrors?.imagens}
+            rules={!editingVidaNoturna ? [
+              { 
+                validator: (_, value) => {
+                  if (!formData.imagens || formData.imagens.length === 0) {
+                    return Promise.reject(new Error('Por favor, selecione pelo menos uma imagem!'));
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ] : []}
           >
             <Upload
               accept="image/*"
+              multiple
               beforeUpload={(file) => {
-                onFileChange({ target: { name: 'imagem', files: [file] } });
+                const currentFiles = formData.imagens || [];
+                onFileChange({ target: { name: 'imagens', files: [...currentFiles, file] } });
                 return false;
               }}
-              maxCount={1}
+              onRemove={(file) => {
+                const currentFiles = formData.imagens || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'imagens', files: newFiles } });
+              }}
+              fileList={formData.imagens?.map((file, index) => ({
+                uid: `-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
               disabled={loading}
             >
-              <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
+              <Button icon={<UploadOutlined />}>Selecionar Imagens</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item
+            label="Vídeos (opcional)"
+            name="videos"
+          >
+            <Upload
+              accept="video/*,.wmv"
+              multiple
+              beforeUpload={(file) => {
+                // Permitir vídeos (incluindo WMV) - validar por extensão também
+                const fileName = file.name?.toLowerCase() || '';
+                const isVideo = file.type?.startsWith('video/') || 
+                               fileName.endsWith('.wmv') ||
+                               fileName.endsWith('.mp4') ||
+                               fileName.endsWith('.webm') ||
+                               fileName.endsWith('.avi') ||
+                               fileName.endsWith('.mov') ||
+                               fileName.endsWith('.mkv') ||
+                               fileName.endsWith('.flv') ||
+                               fileName.endsWith('.m4v');
+                
+                if (!isVideo) {
+                  message.error('Apenas arquivos de vídeo são permitidos (incluindo .wmv, .mp4, .webm, .avi, .mov, .mkv)');
+                  return Upload.LIST_IGNORE;
+                }
+                
+                const currentFiles = formData.videos || [];
+                onFileChange({ target: { name: 'videos', files: [...currentFiles, file] } });
+                return false;
+              }}
+              onRemove={(file) => {
+                const currentFiles = formData.videos || [];
+                const newFiles = currentFiles.filter((f, index) => {
+                  return !(f.name === file.name && f.size === file.size);
+                });
+                onFileChange({ target: { name: 'videos', files: newFiles } });
+              }}
+              fileList={formData.videos?.map((file, index) => ({
+                uid: `video-${index}`,
+                name: file.name,
+                status: 'done',
+              })) || []}
+              disabled={loading}
+            >
+              <Button icon={<UploadOutlined />}>Selecionar Vídeos</Button>
             </Upload>
           </Form.Item>
 
@@ -437,21 +510,57 @@ const VidaNoturna = ({
             </div>
             <div>
               <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
-                Imagem:
+                Imagens:
               </Text>
-              <div style={{ 
-                borderRadius: 8, 
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <ImageWithAuth
-                  key={`img-${selectedVidaNoturna.id}`}
-                  src={selectedVidaNoturna.linkImagem}
-                  alt={selectedVidaNoturna.titulo}
-                  style={{ width: '100%', display: 'block' }}
-                />
-              </div>
+              <Row gutter={[16, 16]}>
+                {selectedVidaNoturna.linkImagens && selectedVidaNoturna.linkImagens.length > 0 ? (
+                  selectedVidaNoturna.linkImagens.map((imagemUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <ImageWithAuth
+                          key={`img-${selectedVidaNoturna.id}-${index}`}
+                          src={imagemUrl}
+                          alt={`${selectedVidaNoturna.titulo} - Imagem ${index + 1}`}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <Col span={24}>
+                    <Text style={{ color: '#8c8c8c' }}>Nenhuma imagem cadastrada</Text>
+                  </Col>
+                )}
+              </Row>
             </div>
+            {selectedVidaNoturna.linkVideos && selectedVidaNoturna.linkVideos.length > 0 && (
+              <div>
+                <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
+                  Vídeos:
+                </Text>
+                <Row gutter={[16, 16]}>
+                  {selectedVidaNoturna.linkVideos.map((videoUrl, index) => (
+                    <Col key={index} span={12}>
+                      <div style={{ 
+                        borderRadius: 8, 
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        <VideoWithAuth
+                          key={`video-${selectedVidaNoturna.id}-${index}`}
+                          src={videoUrl}
+                          style={{ width: '100%', display: 'block' }}
+                        />
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
           </Space>
         )}
       </Modal>
@@ -505,16 +614,30 @@ const VidaNoturna = ({
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                   >
-                    <ImageWithAuth
-                      key={`${vidaNoturna.id}-${imageRefreshKey}`}
-                      src={vidaNoturna.linkImagem}
-                      alt={vidaNoturna.titulo}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover'
-                      }}
-                    />
+                    {vidaNoturna.linkImagens && vidaNoturna.linkImagens.length > 0 ? (
+                      <ImageWithAuth
+                        key={`${vidaNoturna.id}-${imageRefreshKey}`}
+                        src={vidaNoturna.linkImagens[0]}
+                        alt={vidaNoturna.titulo}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#8c8c8c'
+                      }}>
+                        Sem imagem
+                      </div>
+                    )}
                   </div>
                   {vidaNoturna.destaque && (
                     <div style={{
