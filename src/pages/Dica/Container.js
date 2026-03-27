@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/Layout';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
@@ -32,11 +32,7 @@ const DicaContainer = () => {
     icone: null,
   });
 
-  useEffect(() => {
-    carregarDicas();
-  }, [lang]);
-
-  const carregarDicas = async () => {
+  const carregarDicas = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.listarDicas(lang);
@@ -46,7 +42,11 @@ const DicaContainer = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang, showError]);
+
+  useEffect(() => {
+    carregarDicas();
+  }, [carregarDicas]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

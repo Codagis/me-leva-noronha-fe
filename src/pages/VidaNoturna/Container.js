@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/Layout';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
@@ -32,11 +32,7 @@ const VidaNoturnaContainer = () => {
     videos: [],
   });
 
-  useEffect(() => {
-    carregarVidaNoturnas();
-  }, [lang]);
-
-  const carregarVidaNoturnas = async () => {
+  const carregarVidaNoturnas = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.listarVidaNoturna(lang);
@@ -46,7 +42,11 @@ const VidaNoturnaContainer = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang, showError]);
+
+  useEffect(() => {
+    carregarVidaNoturnas();
+  }, [carregarVidaNoturnas]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

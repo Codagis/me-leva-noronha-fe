@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/Layout';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
@@ -31,11 +31,7 @@ const RestauranteContainer = () => {
     tipoAcao: null,
   });
 
-  useEffect(() => {
-    carregarRestaurantes();
-  }, [categoriaFiltro, lang]);
-
-  const carregarRestaurantes = async () => {
+  const carregarRestaurantes = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.listarRestaurantes(categoriaFiltro, lang);
@@ -45,7 +41,11 @@ const RestauranteContainer = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoriaFiltro, lang, showError]);
+
+  useEffect(() => {
+    carregarRestaurantes();
+  }, [carregarRestaurantes]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -19,7 +19,6 @@ import {
 } from 'antd';
 import { useEffect } from 'react';
 import { 
-  PlusOutlined, 
   ReloadOutlined, 
   EditOutlined, 
   DeleteOutlined, 
@@ -89,7 +88,7 @@ const VidaNoturna = ({
     } else {
       form.resetFields();
     }
-  }, [showForm, editingVidaNoturna?.id, form]);
+  }, [showForm, editingVidaNoturna, form]);
 
   useEffect(() => {
     if (validationErrors && Object.keys(validationErrors).length > 0) {
