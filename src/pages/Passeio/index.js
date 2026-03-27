@@ -16,6 +16,7 @@ import {
   Popconfirm,
   Select,
   InputNumber,
+  Tabs,
   message
 } from 'antd';
 import { 
@@ -34,10 +35,16 @@ import VideoWithAuth from '../../components/VideoWithAuth';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
+
+/** Evita ".map is not a function" quando API/Form devolvem null, objeto ou tipo inesperado */
+const asArray = (v) => (Array.isArray(v) ? v : []);
 
 const Passeio = ({
   passeios,
   loading,
+  lang,
+  onLangChange,
   showForm,
   selectedPasseio,
   editingPasseio,
@@ -46,7 +53,6 @@ const Passeio = ({
   validationErrors,
   onInputChange,
   onFileChange,
-  onItensIncluidosChange,
   onPerguntasRespostasChange,
   onSubmit,
   onShowForm,
@@ -58,24 +64,39 @@ const Passeio = ({
   onRefresh,
 }) => {
   const [form] = Form.useForm();
-  const [itemInput, setItemInput] = useState('');
-  const [perguntaInput, setPerguntaInput] = useState('');
-  const [respostaInput, setRespostaInput] = useState('');
+  const listaPasseios = asArray(passeios);
+  const [perguntaInput, setPerguntaInput] = useState({ pt: '', en: '', es: '' });
+  const [respostaInput, setRespostaInput] = useState({ pt: '', en: '', es: '' });
 
   useEffect(() => {
     if (showForm) {
       if (editingPasseio) {
         const whatsappValue = editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || '';
+        const i18n = editingPasseio.i18n || {};
         const values = {
-          tag: editingPasseio.tag || '',
-          titulo: editingPasseio.titulo || '',
-          descricao: editingPasseio.descricao || '',
+          tituloPt: i18n.pt?.titulo || editingPasseio.titulo || '',
+          descricaoPt: i18n.pt?.descricao || editingPasseio.descricao || '',
+          tagPt: i18n.pt?.tag || editingPasseio.tag || '',
+          tagsPt: i18n.pt?.tags || editingPasseio.tags || [],
+          itensIncluidosPt: i18n.pt?.itensIncluidos || editingPasseio.itensIncluidos || [],
+          tituloEn: i18n.en?.titulo || '',
+          descricaoEn: i18n.en?.descricao || '',
+          tagEn: i18n.en?.tag || '',
+          tagsEn: i18n.en?.tags || [],
+          itensIncluidosEn: i18n.en?.itensIncluidos || [],
+          tituloEs: i18n.es?.titulo || '',
+          descricaoEs: i18n.es?.descricao || '',
+          tagEs: i18n.es?.tag || '',
+          tagsEs: i18n.es?.tags || [],
+          itensIncluidosEs: i18n.es?.itensIncluidos || [],
           duracao: editingPasseio.duracao || '',
           valor: editingPasseio.valor ? parseFloat(editingPasseio.valor) : undefined,
           numeroWhatsapp: whatsappValue,
           categoria: editingPasseio.categoria || 'AQUATICOS',
           topRanking: editingPasseio.topRanking || null,
-          perguntasRespostas: editingPasseio.perguntasRespostas || [],
+          perguntasRespostasPt: i18n.pt?.perguntasRespostas || editingPasseio.perguntasRespostas || [],
+          perguntasRespostasEn: i18n.en?.perguntasRespostas || [],
+          perguntasRespostasEs: i18n.es?.perguntasRespostas || [],
         };
         form.resetFields();
         setTimeout(() => {
@@ -83,11 +104,9 @@ const Passeio = ({
         }, 100);
       } else {
         form.resetFields();
-        setItemInput('');
       }
     } else {
       form.resetFields();
-      setItemInput('');
     }
   }, [showForm, editingPasseio?.id, editingPasseio?.numeroWhatsapp, editingPasseio?.linkWhatsapp, form]);
 
@@ -103,20 +122,32 @@ const Passeio = ({
 
   const handleFormSubmit = (values) => {
     const formValues = {
-      tag: values.tag || '',
-      titulo: values.titulo || '',
-      descricao: values.descricao || '',
+      tituloPt: values.tituloPt || '',
+      descricaoPt: values.descricaoPt || '',
+      tagPt: values.tagPt || '',
+      tagsPt: asArray(values.tagsPt),
+      tituloEn: values.tituloEn || '',
+      descricaoEn: values.descricaoEn || '',
+      tagEn: values.tagEn || '',
+      tagsEn: asArray(values.tagsEn),
+      tituloEs: values.tituloEs || '',
+      descricaoEs: values.descricaoEs || '',
+      tagEs: values.tagEs || '',
+      tagsEs: asArray(values.tagsEs),
       duracao: values.duracao || '',
       valor: values.valor?.toString() || '',
       numeroWhatsapp: values.numeroWhatsapp || '',
       categoria: values.categoria || 'AQUATICOS',
       topRanking: values.topRanking || null,
-      itensIncluidos: formData.itensIncluidos || [],
+      itensIncluidosPt: asArray(values.itensIncluidosPt),
+      itensIncluidosEn: asArray(values.itensIncluidosEn),
+      itensIncluidosEs: asArray(values.itensIncluidosEs),
+      perguntasRespostasPt: asArray(values.perguntasRespostasPt),
+      perguntasRespostasEn: asArray(values.perguntasRespostasEn),
+      perguntasRespostasEs: asArray(values.perguntasRespostasEs),
     };
     
-    onInputChange({ target: { name: 'tag', value: formValues.tag } });
-    onInputChange({ target: { name: 'titulo', value: formValues.titulo } });
-    onInputChange({ target: { name: 'descricao', value: formValues.descricao } });
+    Object.entries(formValues).forEach(([k, v]) => onInputChange({ target: { name: k, value: v } }));
     onInputChange({ target: { name: 'duracao', value: formValues.duracao } });
     onInputChange({ target: { name: 'valor', value: formValues.valor } });
     onInputChange({ target: { name: 'numeroWhatsapp', value: formValues.numeroWhatsapp } });
@@ -130,34 +161,24 @@ const Passeio = ({
     onSubmit(fakeEvent, formValues);
   };
 
-  const handleAddItem = () => {
-    if (itemInput.trim()) {
-      const newItems = [...(formData.itensIncluidos || []), itemInput.trim()];
-      onItensIncluidosChange(newItems);
-      setItemInput('');
+  const handleAddPerguntaResposta = (langKey, fieldName) => {
+    const pergunta = perguntaInput[langKey]?.trim();
+    const resposta = respostaInput[langKey]?.trim();
+    if (pergunta && resposta) {
+      const current = asArray(form.getFieldValue(fieldName));
+      const newPR = [...current, { pergunta, resposta }];
+      form.setFieldValue(fieldName, newPR);
+      onPerguntasRespostasChange(fieldName, newPR);
+      setPerguntaInput(prev => ({ ...prev, [langKey]: '' }));
+      setRespostaInput(prev => ({ ...prev, [langKey]: '' }));
     }
   };
 
-  const handleRemoveItem = (indexToRemove) => {
-    const newItems = (formData.itensIncluidos || []).filter((_, i) => i !== indexToRemove);
-    onItensIncluidosChange(newItems);
-  };
-
-  const handleAddPerguntaResposta = () => {
-    if (perguntaInput.trim() && respostaInput.trim()) {
-      const newPR = [...(formData.perguntasRespostas || []), {
-        pergunta: perguntaInput.trim(),
-        resposta: respostaInput.trim()
-      }];
-      onPerguntasRespostasChange(newPR);
-      setPerguntaInput('');
-      setRespostaInput('');
-    }
-  };
-
-  const handleRemovePerguntaResposta = (indexToRemove) => {
-    const newPR = (formData.perguntasRespostas || []).filter((_, i) => i !== indexToRemove);
-    onPerguntasRespostasChange(newPR);
+  const handleRemovePerguntaResposta = (langKey, fieldName, indexToRemove) => {
+    const current = asArray(form.getFieldValue(fieldName));
+    const newPR = current.filter((_, i) => i !== indexToRemove);
+    form.setFieldValue(fieldName, newPR);
+    onPerguntasRespostasChange(fieldName, newPR);
   };
 
   const formatCurrency = (value) => {
@@ -205,6 +226,16 @@ const Passeio = ({
       }}>
         <Title level={2} style={{ margin: 0, fontWeight: 400, color: '#262626' }}>Passeios</Title>
         <Space>
+          <Select
+            value={lang || 'pt'}
+            onChange={onLangChange}
+            style={{ width: 140 }}
+            disabled={loading}
+          >
+            <Option value="pt">Português</Option>
+            <Option value="en">Inglês</Option>
+            <Option value="es">Espanhol</Option>
+          </Select>
           <Button 
             icon={<ReloadOutlined />} 
             onClick={onRefresh} 
@@ -244,70 +275,174 @@ const Passeio = ({
           preserve={false}
           key={editingPasseio ? `edit-${editingPasseio.id}-${editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || ''}` : 'new'}
             initialValues={editingPasseio ? {
-            tag: editingPasseio.tag || '',
-            titulo: editingPasseio.titulo || '',
-            descricao: editingPasseio.descricao || '',
+            tituloPt: editingPasseio.i18n?.pt?.titulo || editingPasseio.titulo || '',
+            descricaoPt: editingPasseio.i18n?.pt?.descricao || editingPasseio.descricao || '',
+            tagPt: editingPasseio.i18n?.pt?.tag || editingPasseio.tag || '',
+            tagsPt: editingPasseio.i18n?.pt?.tags || editingPasseio.tags || [],
+            itensIncluidosPt: editingPasseio.i18n?.pt?.itensIncluidos || editingPasseio.itensIncluidos || [],
+            tituloEn: editingPasseio.i18n?.en?.titulo || '',
+            descricaoEn: editingPasseio.i18n?.en?.descricao || '',
+            tagEn: editingPasseio.i18n?.en?.tag || '',
+            tagsEn: editingPasseio.i18n?.en?.tags || [],
+            itensIncluidosEn: editingPasseio.i18n?.en?.itensIncluidos || [],
+            tituloEs: editingPasseio.i18n?.es?.titulo || '',
+            descricaoEs: editingPasseio.i18n?.es?.descricao || '',
+            tagEs: editingPasseio.i18n?.es?.tag || '',
+            tagsEs: editingPasseio.i18n?.es?.tags || [],
+            itensIncluidosEs: editingPasseio.i18n?.es?.itensIncluidos || [],
             duracao: editingPasseio.duracao || '',
             valor: editingPasseio.valor ? parseFloat(editingPasseio.valor) : undefined,
             numeroWhatsapp: editingPasseio.numeroWhatsapp || editingPasseio.linkWhatsapp || '',
             categoria: editingPasseio.categoria || 'AQUATICOS',
             topRanking: editingPasseio.topRanking || null,
-            perguntasRespostas: editingPasseio.perguntasRespostas || [],
+            perguntasRespostasPt: editingPasseio.i18n?.pt?.perguntasRespostas || editingPasseio.perguntasRespostas || [],
+            perguntasRespostasEn: editingPasseio.i18n?.en?.perguntasRespostas || [],
+            perguntasRespostasEs: editingPasseio.i18n?.es?.perguntasRespostas || [],
           } : {
-            tag: '',
-            titulo: '',
-            descricao: '',
+            tituloPt: '',
+            descricaoPt: '',
+            tagPt: '',
+            tagsPt: [],
+            itensIncluidosPt: [],
+            tituloEn: '',
+            descricaoEn: '',
+            tagEn: '',
+            tagsEn: [],
+            itensIncluidosEn: [],
+            tituloEs: '',
+            descricaoEs: '',
+            tagEs: '',
+            tagsEs: [],
+            itensIncluidosEs: [],
             duracao: '',
             valor: undefined,
             numeroWhatsapp: '',
             categoria: 'AQUATICOS',
             topRanking: null,
-            perguntasRespostas: [],
+            perguntasRespostasPt: [],
+            perguntasRespostasEn: [],
+            perguntasRespostasEs: [],
           }}
         >
-          <Form.Item
-            label="Tag (opcional)"
-            name="tag"
-            rules={[
-              { max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite a tag"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Título"
-            name="titulo"
-            rules={[
-              { required: true, message: 'Por favor, digite o título!' },
-              { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite o título"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Descrição"
-            name="descricao"
-            validateStatus={validationErrors?.descricao ? 'error' : ''}
-            help={validationErrors?.descricao}
-            rules={[
-              { required: true, message: 'Por favor, digite a descrição!' },
-              { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
-            ]}
-          >
-            <TextArea
-              rows={5}
-              placeholder="Digite a descrição"
-              disabled={loading}
-            />
-          </Form.Item>
+          <Tabs defaultActiveKey="pt">
+            <TabPane tab="PT" key="pt">
+              <Form.Item
+                label="Tag (PT) (opcional)"
+                name="tagPt"
+                rules={[{ max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }]}
+              >
+                <Input placeholder="Digite a tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Tags (PT) (opcional)" name="tagsPt">
+                <Select mode="tags" placeholder="Digite e pressione Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Título (PT)"
+                name="tituloPt"
+                rules={[
+                  { required: true, message: 'Por favor, digite o título (PT)!' },
+                  { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Digite o título" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Descrição (PT)"
+                name="descricaoPt"
+                rules={[
+                  { required: true, message: 'Por favor, digite a descrição (PT)!' },
+                  { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
+                ]}
+              >
+                <TextArea rows={5} placeholder="Digite a descrição" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Itens Incluídos (PT)" name="itensIncluidosPt">
+                <Select mode="tags" placeholder="Digite e pressione Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Perguntas e Respostas (PT) (opcional)" name="perguntasRespostasPt">
+                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                  {asArray(form.getFieldValue('perguntasRespostasPt')).map((pr, index) => (
+                    <div key={`pr-pt-${index}`} style={{ padding: '10px', background: '#fafafa', borderRadius: 6, border: '1px solid #e8e8e8', position: 'relative' }}>
+                      <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={() => handleRemovePerguntaResposta('pt', 'perguntasRespostasPt', index)} style={{ position: 'absolute', top: 6, right: 6 }} />
+                      <Text strong style={{ display: 'block' }}>{pr.pergunta}</Text>
+                      <Text>{pr.resposta}</Text>
+                    </div>
+                  ))}
+                  <TextArea placeholder="Pergunta (PT)" value={perguntaInput.pt} onChange={(e) => setPerguntaInput(prev => ({ ...prev, pt: e.target.value }))} rows={2} disabled={loading} />
+                  <TextArea placeholder="Resposta (PT)" value={respostaInput.pt} onChange={(e) => setRespostaInput(prev => ({ ...prev, pt: e.target.value }))} rows={3} disabled={loading} />
+                  <Button onClick={() => handleAddPerguntaResposta('pt', 'perguntasRespostasPt')} disabled={loading || !perguntaInput.pt.trim() || !respostaInput.pt.trim()} type="dashed" block>
+                    Adicionar Pergunta/Resposta PT
+                  </Button>
+                </Space>
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="EN" key="en">
+              <Form.Item label="Tag (EN) (opcional)" name="tagEn" rules={[{ max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }]}>
+                <Input placeholder="Type tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Tags (EN) (opcional)" name="tagsEn">
+                <Select mode="tags" placeholder="Type and press Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Título (EN) (opcional)" name="tituloEn" rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Type title" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (EN) (opcional)" name="descricaoEn" rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Type description" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Itens Incluídos (EN) (opcional)" name="itensIncluidosEn">
+                <Select mode="tags" placeholder="Type and press Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Perguntas e Respostas (EN) (opcional)" name="perguntasRespostasEn">
+                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                  {asArray(form.getFieldValue('perguntasRespostasEn')).map((pr, index) => (
+                    <div key={`pr-en-${index}`} style={{ padding: '10px', background: '#fafafa', borderRadius: 6, border: '1px solid #e8e8e8', position: 'relative' }}>
+                      <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={() => handleRemovePerguntaResposta('en', 'perguntasRespostasEn', index)} style={{ position: 'absolute', top: 6, right: 6 }} />
+                      <Text strong style={{ display: 'block' }}>{pr.pergunta}</Text>
+                      <Text>{pr.resposta}</Text>
+                    </div>
+                  ))}
+                  <TextArea placeholder="Question (EN)" value={perguntaInput.en} onChange={(e) => setPerguntaInput(prev => ({ ...prev, en: e.target.value }))} rows={2} disabled={loading} />
+                  <TextArea placeholder="Answer (EN)" value={respostaInput.en} onChange={(e) => setRespostaInput(prev => ({ ...prev, en: e.target.value }))} rows={3} disabled={loading} />
+                  <Button onClick={() => handleAddPerguntaResposta('en', 'perguntasRespostasEn')} disabled={loading || !perguntaInput.en.trim() || !respostaInput.en.trim()} type="dashed" block>
+                    Add Q/A EN
+                  </Button>
+                </Space>
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="ES" key="es">
+              <Form.Item label="Tag (ES) (opcional)" name="tagEs" rules={[{ max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }]}>
+                <Input placeholder="Escribe la tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Tags (ES) (opcional)" name="tagsEs">
+                <Select mode="tags" placeholder="Escribe y presiona Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Título (ES) (opcional)" name="tituloEs" rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Escribe el título" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (ES) (opcional)" name="descricaoEs" rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Escribe la descripción" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Itens Incluídos (ES) (opcional)" name="itensIncluidosEs">
+                <Select mode="tags" placeholder="Escribe y presiona Enter" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Perguntas e Respostas (ES) (opcional)" name="perguntasRespostasEs">
+                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                  {asArray(form.getFieldValue('perguntasRespostasEs')).map((pr, index) => (
+                    <div key={`pr-es-${index}`} style={{ padding: '10px', background: '#fafafa', borderRadius: 6, border: '1px solid #e8e8e8', position: 'relative' }}>
+                      <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={() => handleRemovePerguntaResposta('es', 'perguntasRespostasEs', index)} style={{ position: 'absolute', top: 6, right: 6 }} />
+                      <Text strong style={{ display: 'block' }}>{pr.pergunta}</Text>
+                      <Text>{pr.resposta}</Text>
+                    </div>
+                  ))}
+                  <TextArea placeholder="Pregunta (ES)" value={perguntaInput.es} onChange={(e) => setPerguntaInput(prev => ({ ...prev, es: e.target.value }))} rows={2} disabled={loading} />
+                  <TextArea placeholder="Respuesta (ES)" value={respostaInput.es} onChange={(e) => setRespostaInput(prev => ({ ...prev, es: e.target.value }))} rows={3} disabled={loading} />
+                  <Button onClick={() => handleAddPerguntaResposta('es', 'perguntasRespostasEs')} disabled={loading || !perguntaInput.es.trim() || !respostaInput.es.trim()} type="dashed" block>
+                    Agregar P/R ES
+                  </Button>
+                </Space>
+              </Form.Item>
+            </TabPane>
+          </Tabs>
 
           <Row gutter={16}>
             <Col span={12}>
@@ -347,41 +482,7 @@ const Passeio = ({
             </Col>
           </Row>
 
-          <Form.Item
-            label="Itens Incluídos"
-            name="itensIncluidos"
-            validateStatus={validationErrors?.itensIncluidos ? 'error' : ''}
-            help={validationErrors?.itensIncluidos}
-          >
-            <Space direction="vertical" style={{ width: '100%' }} size="small">
-              {(formData.itensIncluidos || []).length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {(formData.itensIncluidos || []).map((item, index) => (
-                    <Tag
-                      key={`item-${index}-${item}`}
-                      closable
-                      onClose={() => handleRemoveItem(index)}
-                      style={{ marginBottom: 0 }}
-                    >
-                      {item}
-                    </Tag>
-                  ))}
-                </div>
-              )}
-              <Space.Compact style={{ width: '100%' }}>
-                <Input
-                  placeholder="Digite um item e pressione Enter"
-                  value={itemInput}
-                  onChange={(e) => setItemInput(e.target.value)}
-                  onPressEnter={handleAddItem}
-                  disabled={loading}
-                />
-                <Button onClick={handleAddItem} disabled={loading || !itemInput.trim()}>
-                  Adicionar
-                </Button>
-              </Space.Compact>
-            </Space>
-          </Form.Item>
+          {/* Itens incluídos agora ficam dentro das abas de idioma */}
 
           <Form.Item
             label="Número WhatsApp"
@@ -465,7 +566,7 @@ const Passeio = ({
                 });
                 onFileChange({ target: { name: 'imagens', files: newFiles } });
               }}
-              fileList={formData.imagens?.map((file, index) => ({
+              fileList={asArray(formData.imagens).map((file, index) => ({
                 uid: `-${index}`,
                 name: file.name,
                 status: 'done',
@@ -513,7 +614,7 @@ const Passeio = ({
                 });
                 onFileChange({ target: { name: 'videos', files: newFiles } });
               }}
-              fileList={formData.videos?.map((file, index) => ({
+              fileList={asArray(formData.videos).map((file, index) => ({
                 uid: `video-${index}`,
                 name: file.name,
                 status: 'done',
@@ -524,82 +625,7 @@ const Passeio = ({
             </Upload>
           </Form.Item>
 
-          <Form.Item
-            label="Perguntas e Respostas (opcional)"
-            name="perguntasRespostas"
-          >
-            <Space direction="vertical" style={{ width: '100%' }} size="small">
-              {(formData.perguntasRespostas || []).length > 0 && (
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: 12,
-                  padding: '12px',
-                  background: '#fafafa',
-                  borderRadius: 6,
-                  marginBottom: 8
-                }}>
-                  {(formData.perguntasRespostas || []).map((pr, index) => (
-                    <div
-                      key={`pr-${index}`}
-                      style={{
-                        padding: '12px',
-                        background: '#ffffff',
-                        borderRadius: 4,
-                        border: '1px solid #e8e8e8',
-                        position: 'relative'
-                      }}
-                    >
-                      <Button
-                        type="text"
-                        danger
-                        size="small"
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemovePerguntaResposta(index)}
-                        style={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8
-                        }}
-                      />
-                      <div style={{ paddingRight: 32 }}>
-                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
-                          {pr.pergunta}
-                        </Text>
-                        <Text style={{ color: '#595959', fontSize: 13 }}>
-                          {pr.resposta}
-                        </Text>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <Space direction="vertical" style={{ width: '100%' }} size="small">
-                <TextArea
-                  placeholder="Digite a pergunta"
-                  value={perguntaInput}
-                  onChange={(e) => setPerguntaInput(e.target.value)}
-                  rows={2}
-                  disabled={loading}
-                />
-                <TextArea
-                  placeholder="Digite a resposta"
-                  value={respostaInput}
-                  onChange={(e) => setRespostaInput(e.target.value)}
-                  rows={3}
-                  disabled={loading}
-                />
-                <Button 
-                  onClick={handleAddPerguntaResposta} 
-                  disabled={loading || !perguntaInput.trim() || !respostaInput.trim()}
-                  type="dashed"
-                  block
-                >
-                  Adicionar Pergunta e Resposta
-                </Button>
-              </Space>
-            </Space>
-          </Form.Item>
+          {/* Perguntas e respostas por idioma ficam nas abas PT/EN/ES */}
 
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -664,6 +690,14 @@ const Passeio = ({
                 >
                   {selectedPasseio.tag}
                 </Tag>
+              </div>
+            )}
+            {asArray(selectedPasseio.tags).length > 0 && (
+              <div>
+                <Text strong style={{ marginRight: 8 }}>Tags:</Text>
+                {asArray(selectedPasseio.tags).map((t, idx) => (
+                  <Tag key={`${t}-${idx}`}>{t}</Tag>
+                ))}
               </div>
             )}
 
@@ -741,13 +775,13 @@ const Passeio = ({
               </div>
             )}
 
-            {selectedPasseio.itensIncluidos && selectedPasseio.itensIncluidos.length > 0 && (
+            {asArray(selectedPasseio.itensIncluidos).length > 0 && (
               <div>
                 <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 8 }}>
                   Itens Incluídos:
                 </Text>
                 <div>
-                  {selectedPasseio.itensIncluidos.map((item, index) => (
+                  {asArray(selectedPasseio.itensIncluidos).map((item, index) => (
                     <Tag key={index} style={{ marginBottom: 8 }}>
                       {item}
                     </Tag>
@@ -756,13 +790,13 @@ const Passeio = ({
               </div>
             )}
 
-            {selectedPasseio.perguntasRespostas && selectedPasseio.perguntasRespostas.length > 0 && (
+            {asArray(selectedPasseio.perguntasRespostas).length > 0 && (
               <div>
                 <Text strong style={{ fontSize: 16, color: '#262626', display: 'block', marginBottom: 16 }}>
                   Perguntas Frequentes:
                 </Text>
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                  {selectedPasseio.perguntasRespostas.map((pr, index) => (
+                  {asArray(selectedPasseio.perguntasRespostas).map((pr, index) => (
                     <div
                       key={`pr-${index}`}
                       style={{
@@ -821,8 +855,8 @@ const Passeio = ({
                 Imagens:
               </Text>
               <Row gutter={[16, 16]}>
-                {selectedPasseio.linkImagens && selectedPasseio.linkImagens.length > 0 ? (
-                  selectedPasseio.linkImagens.map((imagemUrl, index) => (
+                {asArray(selectedPasseio.linkImagens).length > 0 ? (
+                  asArray(selectedPasseio.linkImagens).map((imagemUrl, index) => (
                     <Col key={index} span={12}>
                       <div style={{ 
                         borderRadius: 8, 
@@ -845,13 +879,13 @@ const Passeio = ({
                 )}
               </Row>
             </div>
-            {selectedPasseio.linkVideos && selectedPasseio.linkVideos.length > 0 && (
+            {asArray(selectedPasseio.linkVideos).length > 0 && (
               <div>
                 <Text strong style={{ fontSize: 14, color: '#595959', display: 'block', marginBottom: 12 }}>
                   Vídeos:
                 </Text>
                 <Row gutter={[16, 16]}>
-                  {selectedPasseio.linkVideos.map((videoUrl, index) => (
+                  {asArray(selectedPasseio.linkVideos).map((videoUrl, index) => (
                     <Col key={index} span={12}>
                       <div style={{ 
                         borderRadius: 8, 
@@ -879,12 +913,12 @@ const Passeio = ({
         </div>
       )}
 
-      {!loading && passeios.length === 0 && (
+      {!loading && listaPasseios.length === 0 && (
         <Empty description="Nenhum passeio cadastrado ainda." />
       )}
 
       <Row gutter={[24, 24]}>
-        {passeios.map((passeio) => (
+        {listaPasseios.map((passeio) => (
           <Col key={passeio.id} xs={24} sm={12} lg={8} xl={6}>
             <Card
               hoverable
@@ -1076,7 +1110,7 @@ const Passeio = ({
                     >
                       {passeio.descricao}
                     </Text>
-                    {passeio.itensIncluidos && passeio.itensIncluidos.length > 0 && (
+                    {asArray(passeio.itensIncluidos).length > 0 && (
                       <div style={{ 
                         marginTop: 12,
                         marginBottom: 8
@@ -1090,7 +1124,7 @@ const Passeio = ({
                           Itens Incluídos:
                         </Text>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {passeio.itensIncluidos.slice(0, 3).map((item, index) => (
+                          {asArray(passeio.itensIncluidos).slice(0, 3).map((item, index) => (
                             <Tag 
                               key={index}
                               style={{ 
@@ -1103,7 +1137,7 @@ const Passeio = ({
                               {item}
                             </Tag>
                           ))}
-                          {passeio.itensIncluidos.length > 3 && (
+                          {asArray(passeio.itensIncluidos).length > 3 && (
                             <Tag 
                               style={{ 
                                 fontSize: 11,
@@ -1113,7 +1147,7 @@ const Passeio = ({
                                 color: '#8c8c8c'
                               }}
                             >
-                              +{passeio.itensIncluidos.length - 3} mais
+                              +{asArray(passeio.itensIncluidos).length - 3} mais
                             </Tag>
                           )}
                         </div>

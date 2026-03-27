@@ -8,6 +8,7 @@ const VidaNoturnaContainer = () => {
   const { showError, showSuccess } = useToast();
   const [vidaNoturnas, setVidaNoturnas] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState('pt');
   const [showForm, setShowForm] = useState(false);
   const [selectedVidaNoturna, setSelectedVidaNoturna] = useState(null);
   const [editingVidaNoturna, setEditingVidaNoturna] = useState(null);
@@ -15,9 +16,15 @@ const VidaNoturnaContainer = () => {
   const [validationErrors, setValidationErrors] = useState({});
   
   const [formData, setFormData] = useState({
-    titulo: '',
-    descricao: '',
-    destaque: '',
+    tituloPt: '',
+    descricaoPt: '',
+    destaquePt: '',
+    tituloEn: '',
+    descricaoEn: '',
+    destaqueEn: '',
+    tituloEs: '',
+    descricaoEs: '',
+    destaqueEs: '',
     horarioFuncionamento: '',
     numeroWhatsapp: '',
     linkGoogleMaps: '',
@@ -27,13 +34,13 @@ const VidaNoturnaContainer = () => {
 
   useEffect(() => {
     carregarVidaNoturnas();
-  }, []);
+  }, [lang]);
 
   const carregarVidaNoturnas = async () => {
     setLoading(true);
     try {
-      const response = await api.listarVidaNoturna();
-      setVidaNoturnas(response);
+      const response = await api.listarVidaNoturna(lang);
+      setVidaNoturnas(Array.isArray(response) ? response : []);
     } catch (err) {
       showError(err.message || 'Erro ao carregar vida noturna');
     } finally {
@@ -52,7 +59,6 @@ const VidaNoturnaContainer = () => {
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (name === 'imagens' || name === 'videos') {
-      // Para múltiplas imagens/vídeos, manter todas as selecionadas
       const fileArray = Array.from(files || []);
       setFormData(prev => ({
         ...prev,
@@ -63,9 +69,15 @@ const VidaNoturnaContainer = () => {
 
   const resetFormData = () => {
     setFormData({
-      titulo: '',
-      descricao: '',
-      destaque: '',
+      tituloPt: '',
+      descricaoPt: '',
+      destaquePt: '',
+      tituloEn: '',
+      descricaoEn: '',
+      destaqueEn: '',
+      tituloEs: '',
+      descricaoEs: '',
+      destaqueEs: '',
       horarioFuncionamento: '',
       numeroWhatsapp: '',
       linkGoogleMaps: '',
@@ -80,30 +92,40 @@ const VidaNoturnaContainer = () => {
 
     try {
       const finalValues = formValues ? {
-        titulo: formValues.titulo,
-        descricao: formValues.descricao,
-        destaque: formValues.destaque,
+        tituloPt: formValues.tituloPt,
+        descricaoPt: formValues.descricaoPt,
+        destaquePt: formValues.destaquePt,
+        tituloEn: formValues.tituloEn,
+        descricaoEn: formValues.descricaoEn,
+        destaqueEn: formValues.destaqueEn,
+        tituloEs: formValues.tituloEs,
+        descricaoEs: formValues.descricaoEs,
+        destaqueEs: formValues.destaqueEs,
         horarioFuncionamento: formValues.horarioFuncionamento,
         numeroWhatsapp: formValues.numeroWhatsapp,
         linkGoogleMaps: formValues.linkGoogleMaps,
       } : formData;
 
       const formDataToSend = new FormData();
-      formDataToSend.append('titulo', finalValues.titulo);
-      formDataToSend.append('descricao', finalValues.descricao || '');
-      formDataToSend.append('destaque', finalValues.destaque || '');
+      formDataToSend.append('tituloPt', finalValues.tituloPt);
+      formDataToSend.append('descricaoPt', finalValues.descricaoPt || '');
+      formDataToSend.append('destaquePt', finalValues.destaquePt || '');
+      formDataToSend.append('tituloEn', finalValues.tituloEn || '');
+      formDataToSend.append('descricaoEn', finalValues.descricaoEn || '');
+      formDataToSend.append('destaqueEn', finalValues.destaqueEn || '');
+      formDataToSend.append('tituloEs', finalValues.tituloEs || '');
+      formDataToSend.append('descricaoEs', finalValues.descricaoEs || '');
+      formDataToSend.append('destaqueEs', finalValues.destaqueEs || '');
       formDataToSend.append('horarioFuncionamento', finalValues.horarioFuncionamento);
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       formDataToSend.append('linkGoogleMaps', finalValues.linkGoogleMaps);
       
-      // Adicionar múltiplas imagens
       if (formData.imagens && formData.imagens.length > 0) {
         formData.imagens.forEach((imagem) => {
           formDataToSend.append('imagens', imagem);
         });
       }
       
-      // Adicionar múltiplos vídeos
       if (formData.videos && formData.videos.length > 0) {
         formData.videos.forEach((video) => {
           formDataToSend.append('videos', video);
@@ -149,7 +171,7 @@ const VidaNoturnaContainer = () => {
   const handleViewDetails = async (id) => {
     setLoading(true);
     try {
-      const vidaNoturna = await api.buscarVidaNoturnaPorId(id);
+      const vidaNoturna = await api.buscarVidaNoturnaPorId(id, lang);
       setSelectedVidaNoturna(vidaNoturna);
     } catch (err) {
       showError(err.message || 'Erro ao buscar detalhes');
@@ -185,10 +207,17 @@ const VidaNoturnaContainer = () => {
 
   const handleEdit = (vidaNoturna) => {
     setEditingVidaNoturna(vidaNoturna);
+    const i18n = vidaNoturna.i18n || {};
     setFormData({
-      titulo: vidaNoturna.titulo || '',
-      descricao: vidaNoturna.descricao || '',
-      destaque: vidaNoturna.destaque || '',
+      tituloPt: i18n.pt?.titulo || vidaNoturna.titulo || '',
+      descricaoPt: i18n.pt?.descricao || vidaNoturna.descricao || '',
+      destaquePt: i18n.pt?.destaque || vidaNoturna.destaque || '',
+      tituloEn: i18n.en?.titulo || '',
+      descricaoEn: i18n.en?.descricao || '',
+      destaqueEn: i18n.en?.destaque || '',
+      tituloEs: i18n.es?.titulo || '',
+      descricaoEs: i18n.es?.descricao || '',
+      destaqueEs: i18n.es?.destaque || '',
       horarioFuncionamento: vidaNoturna.horarioFuncionamento || '',
       numeroWhatsapp: vidaNoturna.numeroWhatsapp || '',
       linkGoogleMaps: vidaNoturna.linkGoogleMaps || '',
@@ -218,6 +247,8 @@ const VidaNoturnaContainer = () => {
       <VidaNoturna
         vidaNoturnas={vidaNoturnas}
         loading={loading}
+        lang={lang}
+        onLangChange={setLang}
         showForm={showForm}
         selectedVidaNoturna={selectedVidaNoturna}
         editingVidaNoturna={editingVidaNoturna}
@@ -240,4 +271,3 @@ const VidaNoturnaContainer = () => {
 };
 
 export default VidaNoturnaContainer;
-

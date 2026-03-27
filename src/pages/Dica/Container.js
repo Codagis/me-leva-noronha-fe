@@ -8,6 +8,7 @@ const DicaContainer = () => {
   const { showError, showSuccess } = useToast();
   const [dicas, setDicas] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState('pt');
   const [showForm, setShowForm] = useState(false);
   const [selectedDica, setSelectedDica] = useState(null);
   const [editingDica, setEditingDica] = useState(null);
@@ -16,9 +17,15 @@ const DicaContainer = () => {
   const [validationErrors, setValidationErrors] = useState({});
   
   const [formData, setFormData] = useState({
-    tag: '',
-    titulo: '',
-    descricao: '',
+    tagPt: '',
+    tituloPt: '',
+    descricaoPt: '',
+    tagEn: '',
+    tituloEn: '',
+    descricaoEn: '',
+    tagEs: '',
+    tituloEs: '',
+    descricaoEs: '',
     numeroWhatsapp: '',
     imagens: [],
     videos: [],
@@ -27,13 +34,13 @@ const DicaContainer = () => {
 
   useEffect(() => {
     carregarDicas();
-  }, []);
+  }, [lang]);
 
   const carregarDicas = async () => {
     setLoading(true);
     try {
-      const response = await api.listarDicas();
-      setDicas(response);
+      const response = await api.listarDicas(lang);
+      setDicas(Array.isArray(response) ? response : []);
     } catch (err) {
       showError(err.message || 'Erro ao carregar dicas');
     } finally {
@@ -52,14 +59,12 @@ const DicaContainer = () => {
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (name === 'imagens' || name === 'videos') {
-      // Para múltiplas imagens/vídeos, manter todas as selecionadas
       const fileArray = Array.from(files || []);
       setFormData(prev => ({
         ...prev,
         [name]: fileArray,
       }));
     } else {
-      // Para ícone, manter apenas um arquivo
       setFormData(prev => ({
         ...prev,
         [name]: files[0] || null,
@@ -69,9 +74,15 @@ const DicaContainer = () => {
 
   const resetFormData = () => {
     setFormData({
-      tag: '',
-      titulo: '',
-      descricao: '',
+      tagPt: '',
+      tituloPt: '',
+      descricaoPt: '',
+      tagEn: '',
+      tituloEn: '',
+      descricaoEn: '',
+      tagEs: '',
+      tituloEs: '',
+      descricaoEs: '',
       numeroWhatsapp: '',
       imagens: [],
       videos: [],
@@ -85,28 +96,36 @@ const DicaContainer = () => {
 
     try {
       const finalValues = formValues ? {
-        tag: formValues.tag,
-        titulo: formValues.titulo,
-        descricao: formValues.descricao,
+        tagPt: formValues.tagPt,
+        tituloPt: formValues.tituloPt,
+        descricaoPt: formValues.descricaoPt,
+        tagEn: formValues.tagEn,
+        tituloEn: formValues.tituloEn,
+        descricaoEn: formValues.descricaoEn,
+        tagEs: formValues.tagEs,
+        tituloEs: formValues.tituloEs,
+        descricaoEs: formValues.descricaoEs,
         numeroWhatsapp: formValues.numeroWhatsapp,
       } : formData;
 
       const formDataToSend = new FormData();
-      if (finalValues.tag) {
-        formDataToSend.append('tag', finalValues.tag);
-      }
-      formDataToSend.append('titulo', finalValues.titulo);
-      formDataToSend.append('descricao', finalValues.descricao || '');
+      formDataToSend.append('tagPt', finalValues.tagPt || '');
+      formDataToSend.append('tituloPt', finalValues.tituloPt);
+      formDataToSend.append('descricaoPt', finalValues.descricaoPt || '');
+      formDataToSend.append('tagEn', finalValues.tagEn || '');
+      formDataToSend.append('tituloEn', finalValues.tituloEn || '');
+      formDataToSend.append('descricaoEn', finalValues.descricaoEn || '');
+      formDataToSend.append('tagEs', finalValues.tagEs || '');
+      formDataToSend.append('tituloEs', finalValues.tituloEs || '');
+      formDataToSend.append('descricaoEs', finalValues.descricaoEs || '');
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       
-      // Adicionar múltiplas imagens
       if (formData.imagens && formData.imagens.length > 0) {
         formData.imagens.forEach((imagem) => {
           formDataToSend.append('imagens', imagem);
         });
       }
       
-      // Adicionar múltiplos vídeos
       if (formData.videos && formData.videos.length > 0) {
         formData.videos.forEach((video) => {
           formDataToSend.append('videos', video);
@@ -157,7 +176,7 @@ const DicaContainer = () => {
   const handleViewDetails = async (id) => {
     setLoading(true);
     try {
-      const dica = await api.buscarDicaPorId(id);
+      const dica = await api.buscarDicaPorId(id, lang);
       setSelectedDica(dica);
     } catch (err) {
       showError(err.message || 'Erro ao buscar detalhes da dica');
@@ -193,10 +212,17 @@ const DicaContainer = () => {
 
   const handleEdit = (dica) => {
     setEditingDica(dica);
+    const i18n = dica.i18n || {};
     setFormData({
-      tag: dica.tag || '',
-      titulo: dica.titulo || '',
-      descricao: dica.descricao || '',
+      tagPt: i18n.pt?.tag || dica.tag || '',
+      tituloPt: i18n.pt?.titulo || dica.titulo || '',
+      descricaoPt: i18n.pt?.descricao || dica.descricao || '',
+      tagEn: i18n.en?.tag || '',
+      tituloEn: i18n.en?.titulo || '',
+      descricaoEn: i18n.en?.descricao || '',
+      tagEs: i18n.es?.tag || '',
+      tituloEs: i18n.es?.titulo || '',
+      descricaoEs: i18n.es?.descricao || '',
       numeroWhatsapp: dica.numeroWhatsapp || dica.linkWhatsapp || '',
       imagens: [],
       videos: [],
@@ -225,6 +251,8 @@ const DicaContainer = () => {
       <Dica
         dicas={dicas}
         loading={loading}
+        lang={lang}
+        onLangChange={setLang}
         showForm={showForm}
         selectedDica={selectedDica}
         editingDica={editingDica}
@@ -248,4 +276,3 @@ const DicaContainer = () => {
 };
 
 export default DicaContainer;
-

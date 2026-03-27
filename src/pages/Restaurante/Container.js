@@ -8,6 +8,7 @@ const RestauranteContainer = () => {
   const { showError, showSuccess } = useToast();
   const [restaurantes, setRestaurantes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState('pt');
   const [showForm, setShowForm] = useState(false);
   const [selectedRestaurante, setSelectedRestaurante] = useState(null);
   const [editingRestaurante, setEditingRestaurante] = useState(null);
@@ -16,8 +17,12 @@ const RestauranteContainer = () => {
   const [validationErrors, setValidationErrors] = useState({});
   
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
+    nomePt: '',
+    descricaoPt: '',
+    nomeEn: '',
+    descricaoEn: '',
+    nomeEs: '',
+    descricaoEs: '',
     numeroWhatsapp: '',
     categoria: 'ECONOMICO',
     imagens: [],
@@ -28,13 +33,13 @@ const RestauranteContainer = () => {
 
   useEffect(() => {
     carregarRestaurantes();
-  }, [categoriaFiltro]);
+  }, [categoriaFiltro, lang]);
 
   const carregarRestaurantes = async () => {
     setLoading(true);
     try {
-      const response = await api.listarRestaurantes(categoriaFiltro);
-      setRestaurantes(response);
+      const response = await api.listarRestaurantes(categoriaFiltro, lang);
+      setRestaurantes(Array.isArray(response) ? response : []);
     } catch (err) {
       showError(err.message || 'Erro ao carregar restaurantes');
     } finally {
@@ -53,14 +58,12 @@ const RestauranteContainer = () => {
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (name === 'imagens' || name === 'videos') {
-      // Para múltiplas imagens/vídeos, manter todas as selecionadas
       const fileArray = Array.from(files || []);
       setFormData(prev => ({
         ...prev,
         [name]: fileArray,
       }));
     } else {
-      // Para cardápio, manter apenas um arquivo
       setFormData(prev => ({
         ...prev,
         [name]: files[0] || null,
@@ -74,8 +77,12 @@ const RestauranteContainer = () => {
 
   const resetFormData = () => {
     setFormData({
-      nome: '',
-      descricao: '',
+      nomePt: '',
+      descricaoPt: '',
+      nomeEn: '',
+      descricaoEn: '',
+      nomeEs: '',
+      descricaoEs: '',
       numeroWhatsapp: '',
       categoria: 'ECONOMICO',
       imagens: [],
@@ -91,28 +98,34 @@ const RestauranteContainer = () => {
 
     try {
       const finalValues = formValues ? {
-        nome: formValues.nome,
-        descricao: formValues.descricao,
+        nomePt: formValues.nomePt,
+        descricaoPt: formValues.descricaoPt,
+        nomeEn: formValues.nomeEn,
+        descricaoEn: formValues.descricaoEn,
+        nomeEs: formValues.nomeEs,
+        descricaoEs: formValues.descricaoEs,
         numeroWhatsapp: formValues.numeroWhatsapp,
         categoria: formValues.categoria,
         tipoAcao: formValues.tipoAcao,
       } : formData;
 
       const formDataToSend = new FormData();
-      formDataToSend.append('nome', finalValues.nome);
-      formDataToSend.append('descricao', finalValues.descricao);
+      formDataToSend.append('nomePt', finalValues.nomePt);
+      formDataToSend.append('descricaoPt', finalValues.descricaoPt);
+      formDataToSend.append('nomeEn', finalValues.nomeEn || '');
+      formDataToSend.append('descricaoEn', finalValues.descricaoEn || '');
+      formDataToSend.append('nomeEs', finalValues.nomeEs || '');
+      formDataToSend.append('descricaoEs', finalValues.descricaoEs || '');
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
       formDataToSend.append('categoria', finalValues.categoria);
       formDataToSend.append('tipoAcao', finalValues.tipoAcao || '');
       
-      // Adicionar múltiplas imagens
       if (formData.imagens && formData.imagens.length > 0) {
         formData.imagens.forEach((imagem) => {
           formDataToSend.append('imagens', imagem);
         });
       }
       
-      // Adicionar múltiplos vídeos
       if (formData.videos && formData.videos.length > 0) {
         formData.videos.forEach((video) => {
           formDataToSend.append('videos', video);
@@ -162,7 +175,7 @@ const RestauranteContainer = () => {
   const handleViewDetails = async (id) => {
     setLoading(true);
     try {
-      const restaurante = await api.buscarRestaurantePorId(id);
+      const restaurante = await api.buscarRestaurantePorId(id, lang);
       setSelectedRestaurante(restaurante);
     } catch (err) {
       showError(err.message || 'Erro ao buscar detalhes do restaurante');
@@ -198,9 +211,14 @@ const RestauranteContainer = () => {
 
   const handleEdit = (restaurante) => {
     setEditingRestaurante(restaurante);
+    const i18n = restaurante.i18n || {};
     setFormData({
-      nome: restaurante.nome || '',
-      descricao: restaurante.descricao || '',
+      nomePt: i18n.pt?.nome || restaurante.nome || '',
+      descricaoPt: i18n.pt?.descricao || restaurante.descricao || '',
+      nomeEn: i18n.en?.nome || '',
+      descricaoEn: i18n.en?.descricao || '',
+      nomeEs: i18n.es?.nome || '',
+      descricaoEs: i18n.es?.descricao || '',
       numeroWhatsapp: restaurante.numeroWhatsapp || '',
       categoria: restaurante.categoria || 'ECONOMICO',
       imagens: [],
@@ -231,6 +249,8 @@ const RestauranteContainer = () => {
       <Restaurante
         restaurantes={restaurantes}
         loading={loading}
+        lang={lang}
+        onLangChange={setLang}
         showForm={showForm}
         selectedRestaurante={selectedRestaurante}
         editingRestaurante={editingRestaurante}
@@ -255,4 +275,3 @@ const RestauranteContainer = () => {
 };
 
 export default RestauranteContainer;
-

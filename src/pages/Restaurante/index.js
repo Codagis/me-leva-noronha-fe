@@ -15,6 +15,7 @@ import {
   Tag,
   Select,
   Popconfirm,
+  Tabs,
   message
 } from 'antd';
 import { 
@@ -31,10 +32,15 @@ import VideoWithAuth from '../../components/VideoWithAuth';
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
+
+const asArray = (v) => (Array.isArray(v) ? v : []);
 
 const Restaurante = ({
   restaurantes,
   loading,
+  lang,
+  onLangChange,
   showForm,
   selectedRestaurante,
   editingRestaurante,
@@ -63,14 +69,20 @@ const Restaurante = ({
         form.resetFields();
         setSelectedCardapioFile(null);
       } else if (editingRestaurante) {
+        const i18n = editingRestaurante.i18n || {};
         const values = {
-          nome: editingRestaurante.nome || '',
-          descricao: editingRestaurante.descricao || '',
+          nomePt: i18n.pt?.nome || editingRestaurante.nome || '',
+          descricaoPt: i18n.pt?.descricao || editingRestaurante.descricao || '',
+          nomeEn: i18n.en?.nome || '',
+          descricaoEn: i18n.en?.descricao || '',
+          nomeEs: i18n.es?.nome || '',
+          descricaoEs: i18n.es?.descricao || '',
           numeroWhatsapp: editingRestaurante.numeroWhatsapp || '',
           categoria: editingRestaurante.categoria || 'ECONOMICO',
           tipoAcao: editingRestaurante.tipoAcao || null,
         };
-        form.setFieldsValue(values);
+        form.resetFields();
+        setTimeout(() => form.setFieldsValue(values), 100);
         setSelectedCardapioFile(null);
       }
     } else {
@@ -91,18 +103,18 @@ const Restaurante = ({
 
   const handleFormSubmit = (values) => {
     const formValues = {
-      nome: values.nome || '',
-      descricao: values.descricao || '',
+      nomePt: values.nomePt || '',
+      descricaoPt: values.descricaoPt || '',
+      nomeEn: values.nomeEn || '',
+      descricaoEn: values.descricaoEn || '',
+      nomeEs: values.nomeEs || '',
+      descricaoEs: values.descricaoEs || '',
       numeroWhatsapp: values.numeroWhatsapp || '',
       categoria: values.categoria || 'ECONOMICO',
       tipoAcao: values.tipoAcao || null,
     };
     
-    onInputChange({ target: { name: 'nome', value: formValues.nome } });
-    onInputChange({ target: { name: 'descricao', value: formValues.descricao } });
-    onInputChange({ target: { name: 'numeroWhatsapp', value: formValues.numeroWhatsapp } });
-    onInputChange({ target: { name: 'categoria', value: formValues.categoria } });
-    onInputChange({ target: { name: 'tipoAcao', value: formValues.tipoAcao } });
+    Object.entries(formValues).forEach(([k, v]) => onInputChange({ target: { name: k, value: v } }));
     
     const fakeEvent = {
       preventDefault: () => {}
@@ -132,6 +144,16 @@ const Restaurante = ({
             <Option value="MODERADO">$$ Moderado</Option>
             <Option value="SOFISTICADO">$$$ Sofisticado</Option>
             <Option value="PREMIUM">$$$$ Premium</Option>
+          </Select>
+          <Select
+            value={lang || 'pt'}
+            onChange={onLangChange}
+            style={{ width: 140 }}
+            disabled={loading}
+          >
+            <Option value="pt">Português</Option>
+            <Option value="en">Inglês</Option>
+            <Option value="es">Espanhol</Option>
           </Select>
           <Button 
             icon={<ReloadOutlined />} 
@@ -163,6 +185,7 @@ const Restaurante = ({
         styles={{
           body: { padding: '32px' }
         }}
+        forceRender
       >
         <Form
           form={form}
@@ -171,51 +194,71 @@ const Restaurante = ({
           preserve={false}
           key={editingRestaurante ? `edit-${editingRestaurante.id}` : 'new'}
           initialValues={editingRestaurante ? {
-            nome: editingRestaurante.nome || formData.nome || '',
-            descricao: editingRestaurante.descricao || formData.descricao || '',
-            numeroWhatsapp: editingRestaurante.numeroWhatsapp || formData.numeroWhatsapp || '',
-            categoria: editingRestaurante.categoria || formData.categoria || 'ECONOMICO',
-            tipoAcao: editingRestaurante.tipoAcao || formData.tipoAcao || null,
+            nomePt: editingRestaurante.i18n?.pt?.nome || editingRestaurante.nome || '',
+            descricaoPt: editingRestaurante.i18n?.pt?.descricao || editingRestaurante.descricao || '',
+            nomeEn: editingRestaurante.i18n?.en?.nome || '',
+            descricaoEn: editingRestaurante.i18n?.en?.descricao || '',
+            nomeEs: editingRestaurante.i18n?.es?.nome || '',
+            descricaoEs: editingRestaurante.i18n?.es?.descricao || '',
+            numeroWhatsapp: editingRestaurante.numeroWhatsapp || '',
+            categoria: editingRestaurante.categoria || 'ECONOMICO',
+            tipoAcao: editingRestaurante.tipoAcao || null,
           } : {
-            nome: '',
-            descricao: '',
+            nomePt: '',
+            descricaoPt: '',
+            nomeEn: '',
+            descricaoEn: '',
+            nomeEs: '',
+            descricaoEs: '',
             numeroWhatsapp: '',
             categoria: 'ECONOMICO',
             tipoAcao: null,
           }}
         >
-          <Form.Item
-            label="Nome"
-            name="nome"
-            validateStatus={validationErrors?.nome ? 'error' : ''}
-            help={validationErrors?.nome}
-            rules={[
-              { required: true, message: 'Por favor, digite o nome!' },
-              { max: 150, message: 'O nome deve ter no máximo 150 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite o nome do restaurante"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Descrição"
-            name="descricao"
-            validateStatus={validationErrors?.descricao ? 'error' : ''}
-            help={validationErrors?.descricao}
-            rules={[
-              { required: true, message: 'Por favor, digite a descrição!' },
-              { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
-            ]}
-          >
-            <TextArea
-              rows={5}
-              placeholder="Digite a descrição"
-              disabled={loading}
-            />
-          </Form.Item>
+          <Tabs defaultActiveKey="pt">
+            <TabPane tab="PT" key="pt">
+              <Form.Item
+                label="Nome (PT)"
+                name="nomePt"
+                validateStatus={validationErrors?.nomePt ? 'error' : ''}
+                help={validationErrors?.nomePt}
+                rules={[
+                  { required: true, message: 'Por favor, digite o nome (PT)!' },
+                  { max: 150, message: 'O nome deve ter no máximo 150 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Nome do restaurante" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Descrição (PT)"
+                name="descricaoPt"
+                validateStatus={validationErrors?.descricaoPt ? 'error' : ''}
+                help={validationErrors?.descricaoPt}
+                rules={[
+                  { required: true, message: 'Por favor, digite a descrição (PT)!' },
+                  { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
+                ]}
+              >
+                <TextArea rows={5} placeholder="Descrição" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="EN" key="en">
+              <Form.Item label="Nome (EN)" name="nomeEn" validateStatus={validationErrors?.nomeEn ? 'error' : ''} help={validationErrors?.nomeEn} rules={[{ max: 150, message: 'O nome deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Name" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (EN)" name="descricaoEn" validateStatus={validationErrors?.descricaoEn ? 'error' : ''} help={validationErrors?.descricaoEn} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Description" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="ES" key="es">
+              <Form.Item label="Nome (ES)" name="nomeEs" validateStatus={validationErrors?.nomeEs ? 'error' : ''} help={validationErrors?.nomeEs} rules={[{ max: 150, message: 'O nome deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Nombre" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (ES)" name="descricaoEs" validateStatus={validationErrors?.descricaoEs ? 'error' : ''} help={validationErrors?.descricaoEs} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Descripción" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
 
           <Row gutter={16}>
             <Col span={12}>
@@ -628,12 +671,12 @@ const Restaurante = ({
         </div>
       )}
 
-      {!loading && restaurantes.length === 0 && (
+      {!loading && asArray(restaurantes).length === 0 && (
         <Empty description="Nenhum restaurante cadastrado ainda." />
       )}
 
       <Row gutter={[24, 24]}>
-        {restaurantes.map((restaurante) => (
+        {asArray(restaurantes).map((restaurante) => (
           <Col key={restaurante.id} xs={24} sm={12} lg={8} xl={6}>
             <Card
               hoverable

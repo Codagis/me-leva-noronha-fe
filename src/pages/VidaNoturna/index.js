@@ -13,6 +13,8 @@ import {
   Empty,
   Tag,
   Popconfirm,
+  Select,
+  Tabs,
   message
 } from 'antd';
 import { useEffect } from 'react';
@@ -32,10 +34,16 @@ import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
+const { TabPane } = Tabs;
+
+const asArray = (v) => (Array.isArray(v) ? v : []);
 
 const VidaNoturna = ({
   vidaNoturnas,
   loading,
+  lang,
+  onLangChange,
   showForm,
   selectedVidaNoturna,
   editingVidaNoturna,
@@ -57,23 +65,31 @@ const VidaNoturna = ({
 
   useEffect(() => {
     if (showForm) {
-      if (!editingVidaNoturna) {
-        form.resetFields();
-      } else if (editingVidaNoturna) {
+      if (editingVidaNoturna) {
+        const i18n = editingVidaNoturna.i18n || {};
         const values = {
-          titulo: editingVidaNoturna.titulo || '',
-          descricao: editingVidaNoturna.descricao || '',
-          destaque: editingVidaNoturna.destaque || '',
+          tituloPt: i18n.pt?.titulo || editingVidaNoturna.titulo || '',
+          descricaoPt: i18n.pt?.descricao || editingVidaNoturna.descricao || '',
+          destaquePt: i18n.pt?.destaque || editingVidaNoturna.destaque || '',
+          tituloEn: i18n.en?.titulo || '',
+          descricaoEn: i18n.en?.descricao || '',
+          destaqueEn: i18n.en?.destaque || '',
+          tituloEs: i18n.es?.titulo || '',
+          descricaoEs: i18n.es?.descricao || '',
+          destaqueEs: i18n.es?.destaque || '',
           horarioFuncionamento: editingVidaNoturna.horarioFuncionamento || '',
           numeroWhatsapp: editingVidaNoturna.numeroWhatsapp || '',
           linkGoogleMaps: editingVidaNoturna.linkGoogleMaps || '',
         };
-        form.setFieldsValue(values);
+        form.resetFields();
+        setTimeout(() => form.setFieldsValue(values), 100);
+      } else {
+        form.resetFields();
       }
     } else {
       form.resetFields();
     }
-  }, [showForm, editingVidaNoturna, form]);
+  }, [showForm, editingVidaNoturna?.id, form]);
 
   useEffect(() => {
     if (validationErrors && Object.keys(validationErrors).length > 0) {
@@ -87,20 +103,21 @@ const VidaNoturna = ({
 
   const handleFormSubmit = (values) => {
     const formValues = {
-      titulo: values.titulo || '',
-      descricao: values.descricao || '',
-      destaque: values.destaque || '',
+      tituloPt: values.tituloPt || '',
+      descricaoPt: values.descricaoPt || '',
+      destaquePt: values.destaquePt || '',
+      tituloEn: values.tituloEn || '',
+      descricaoEn: values.descricaoEn || '',
+      destaqueEn: values.destaqueEn || '',
+      tituloEs: values.tituloEs || '',
+      descricaoEs: values.descricaoEs || '',
+      destaqueEs: values.destaqueEs || '',
       horarioFuncionamento: values.horarioFuncionamento || '',
       numeroWhatsapp: values.numeroWhatsapp || '',
       linkGoogleMaps: values.linkGoogleMaps || '',
     };
     
-    onInputChange({ target: { name: 'titulo', value: formValues.titulo } });
-    onInputChange({ target: { name: 'descricao', value: formValues.descricao } });
-    onInputChange({ target: { name: 'destaque', value: formValues.destaque } });
-    onInputChange({ target: { name: 'horarioFuncionamento', value: formValues.horarioFuncionamento } });
-    onInputChange({ target: { name: 'numeroWhatsapp', value: formValues.numeroWhatsapp } });
-    onInputChange({ target: { name: 'linkGoogleMaps', value: formValues.linkGoogleMaps } });
+    Object.entries(formValues).forEach(([k, v]) => onInputChange({ target: { name: k, value: v } }));
     
     const fakeEvent = {
       preventDefault: () => {}
@@ -119,6 +136,16 @@ const VidaNoturna = ({
       }}>
         <Title level={2} style={{ margin: 0, fontWeight: 400, color: '#262626' }}>Vida Noturna</Title>
         <Space>
+          <Select
+            value={lang || 'pt'}
+            onChange={onLangChange}
+            style={{ width: 140 }}
+            disabled={loading}
+          >
+            <Option value="pt">Português</Option>
+            <Option value="en">Inglês</Option>
+            <Option value="es">Espanhol</Option>
+          </Select>
           <Button 
             icon={<ReloadOutlined />} 
             onClick={onRefresh} 
@@ -149,6 +176,7 @@ const VidaNoturna = ({
         styles={{
           body: { padding: '32px' }
         }}
+        forceRender
       >
         <Form
           form={form}
@@ -157,65 +185,91 @@ const VidaNoturna = ({
           preserve={false}
           key={editingVidaNoturna ? `edit-${editingVidaNoturna.id}` : 'new'}
           initialValues={editingVidaNoturna ? {
-            titulo: editingVidaNoturna.titulo || formData.titulo || '',
-            descricao: editingVidaNoturna.descricao || formData.descricao || '',
-            destaque: editingVidaNoturna.destaque || formData.destaque || '',
-            horarioFuncionamento: editingVidaNoturna.horarioFuncionamento || formData.horarioFuncionamento || '',
-            numeroWhatsapp: editingVidaNoturna.numeroWhatsapp || formData.numeroWhatsapp || '',
-            linkGoogleMaps: editingVidaNoturna.linkGoogleMaps || formData.linkGoogleMaps || '',
+            tituloPt: editingVidaNoturna.i18n?.pt?.titulo || editingVidaNoturna.titulo || '',
+            descricaoPt: editingVidaNoturna.i18n?.pt?.descricao || editingVidaNoturna.descricao || '',
+            destaquePt: editingVidaNoturna.i18n?.pt?.destaque || editingVidaNoturna.destaque || '',
+            tituloEn: editingVidaNoturna.i18n?.en?.titulo || '',
+            descricaoEn: editingVidaNoturna.i18n?.en?.descricao || '',
+            destaqueEn: editingVidaNoturna.i18n?.en?.destaque || '',
+            tituloEs: editingVidaNoturna.i18n?.es?.titulo || '',
+            descricaoEs: editingVidaNoturna.i18n?.es?.descricao || '',
+            destaqueEs: editingVidaNoturna.i18n?.es?.destaque || '',
+            horarioFuncionamento: editingVidaNoturna.horarioFuncionamento || '',
+            numeroWhatsapp: editingVidaNoturna.numeroWhatsapp || '',
+            linkGoogleMaps: editingVidaNoturna.linkGoogleMaps || '',
           } : {
-            titulo: '',
-            descricao: '',
-            destaque: '',
+            tituloPt: '',
+            descricaoPt: '',
+            destaquePt: '',
+            tituloEn: '',
+            descricaoEn: '',
+            destaqueEn: '',
+            tituloEs: '',
+            descricaoEs: '',
+            destaqueEs: '',
             horarioFuncionamento: '',
             numeroWhatsapp: '',
             linkGoogleMaps: '',
           }}
         >
-          <Form.Item
-            label="Título"
-            name="titulo"
-            validateStatus={validationErrors?.titulo ? 'error' : ''}
-            help={validationErrors?.titulo}
-            rules={[
-              { required: true, message: 'Por favor, digite o título!' },
-              { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite o título"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Descrição"
-            name="descricao"
-            validateStatus={validationErrors?.descricao ? 'error' : ''}
-            help={validationErrors?.descricao}
-            rules={[
-              { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
-            ]}
-          >
-            <TextArea
-              rows={4}
-              placeholder="Digite a descrição"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Destaque"
-            name="destaque"
-            rules={[
-              { max: 255, message: 'O destaque deve ter no máximo 255 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite o destaque"
-              disabled={loading}
-            />
-          </Form.Item>
+          <Tabs defaultActiveKey="pt">
+            <TabPane tab="PT" key="pt">
+              <Form.Item
+                label="Título (PT)"
+                name="tituloPt"
+                validateStatus={validationErrors?.tituloPt ? 'error' : ''}
+                help={validationErrors?.tituloPt}
+                rules={[
+                  { required: true, message: 'Por favor, digite o título (PT)!' },
+                  { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Digite o título" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Descrição (PT)"
+                name="descricaoPt"
+                validateStatus={validationErrors?.descricaoPt ? 'error' : ''}
+                help={validationErrors?.descricaoPt}
+                rules={[
+                  { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
+                ]}
+              >
+                <TextArea rows={4} placeholder="Digite a descrição" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Destaque (PT)"
+                name="destaquePt"
+                rules={[
+                  { max: 255, message: 'O destaque deve ter no máximo 255 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Digite o destaque" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="EN" key="en">
+              <Form.Item label="Título (EN)" name="tituloEn" validateStatus={validationErrors?.tituloEn ? 'error' : ''} help={validationErrors?.tituloEn} rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Title" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (EN)" name="descricaoEn" validateStatus={validationErrors?.descricaoEn ? 'error' : ''} help={validationErrors?.descricaoEn} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={4} placeholder="Description" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Destaque (EN)" name="destaqueEn" rules={[{ max: 255, message: 'O destaque deve ter no máximo 255 caracteres!' }]}>
+                <Input placeholder="Highlight" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="ES" key="es">
+              <Form.Item label="Título (ES)" name="tituloEs" validateStatus={validationErrors?.tituloEs ? 'error' : ''} help={validationErrors?.tituloEs} rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Título" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (ES)" name="descricaoEs" validateStatus={validationErrors?.descricaoEs ? 'error' : ''} help={validationErrors?.descricaoEs} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={4} placeholder="Descripción" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Destaque (ES)" name="destaqueEs" rules={[{ max: 255, message: 'O destaque deve ter no máximo 255 caracteres!' }]}>
+                <Input placeholder="Destacado" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
 
           <Form.Item
             label="Horário de Funcionamento"
@@ -572,12 +626,12 @@ const VidaNoturna = ({
         </div>
       )}
 
-      {!loading && vidaNoturnas.length === 0 && (
+      {!loading && asArray(vidaNoturnas).length === 0 && (
         <Empty description="Nenhum estabelecimento cadastrado ainda." />
       )}
 
       <Row gutter={[24, 24]}>
-        {vidaNoturnas.map((vidaNoturna) => (
+        {asArray(vidaNoturnas).map((vidaNoturna) => (
           <Col key={vidaNoturna.id} xs={24} sm={12} lg={8} xl={6}>
             <Card
               hoverable

@@ -13,6 +13,8 @@ import {
   Empty,
   Tag,
   Popconfirm,
+  Select,
+  Tabs,
   message
 } from 'antd';
 import { useEffect } from 'react';
@@ -29,10 +31,16 @@ import VideoWithAuth from '../../components/VideoWithAuth';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
+const { TabPane } = Tabs;
+
+const asArray = (v) => (Array.isArray(v) ? v : []);
 
 const Dica = ({
   dicas,
   loading,
+  lang,
+  onLangChange,
   showForm,
   selectedDica,
   editingDica,
@@ -56,10 +64,17 @@ const Dica = ({
     if (showForm) {
       if (editingDica) {
         const whatsappValue = editingDica.numeroWhatsapp || editingDica.linkWhatsapp || '';
+        const i18n = editingDica.i18n || {};
         const values = {
-          tag: editingDica.tag || '',
-          titulo: editingDica.titulo || '',
-          descricao: editingDica.descricao || '',
+          tagPt: i18n.pt?.tag || editingDica.tag || '',
+          tituloPt: i18n.pt?.titulo || editingDica.titulo || '',
+          descricaoPt: i18n.pt?.descricao || editingDica.descricao || '',
+          tagEn: i18n.en?.tag || '',
+          tituloEn: i18n.en?.titulo || '',
+          descricaoEn: i18n.en?.descricao || '',
+          tagEs: i18n.es?.tag || '',
+          tituloEs: i18n.es?.titulo || '',
+          descricaoEs: i18n.es?.descricao || '',
           numeroWhatsapp: whatsappValue,
         };
         form.resetFields();
@@ -86,16 +101,19 @@ const Dica = ({
 
   const handleFormSubmit = (values) => {
     const formValues = {
-      tag: values.tag || '',
-      titulo: values.titulo || '',
-      descricao: values.descricao || '',
+      tagPt: values.tagPt || '',
+      tituloPt: values.tituloPt || '',
+      descricaoPt: values.descricaoPt || '',
+      tagEn: values.tagEn || '',
+      tituloEn: values.tituloEn || '',
+      descricaoEn: values.descricaoEn || '',
+      tagEs: values.tagEs || '',
+      tituloEs: values.tituloEs || '',
+      descricaoEs: values.descricaoEs || '',
       numeroWhatsapp: values.numeroWhatsapp || '',
     };
     
-    onInputChange({ target: { name: 'tag', value: formValues.tag } });
-    onInputChange({ target: { name: 'titulo', value: formValues.titulo } });
-    onInputChange({ target: { name: 'descricao', value: formValues.descricao } });
-    onInputChange({ target: { name: 'numeroWhatsapp', value: formValues.numeroWhatsapp } });
+    Object.entries(formValues).forEach(([k, v]) => onInputChange({ target: { name: k, value: v } }));
     
     const fakeEvent = {
       preventDefault: () => {}
@@ -114,6 +132,16 @@ const Dica = ({
       }}>
         <Title level={2} style={{ margin: 0, fontWeight: 400, color: '#262626' }}>Dicas de Viagem</Title>
         <Space>
+          <Select
+            value={lang || 'pt'}
+            onChange={onLangChange}
+            style={{ width: 140 }}
+            disabled={loading}
+          >
+            <Option value="pt">Português</Option>
+            <Option value="en">Inglês</Option>
+            <Option value="es">Espanhol</Option>
+          </Select>
           <Button 
             icon={<ReloadOutlined />} 
             onClick={onRefresh} 
@@ -153,64 +181,91 @@ const Dica = ({
           preserve={false}
           key={editingDica ? `edit-${editingDica.id}-${editingDica.numeroWhatsapp || editingDica.linkWhatsapp || ''}` : 'new'}
           initialValues={editingDica ? {
-            tag: editingDica.tag || '',
-            titulo: editingDica.titulo || '',
-            descricao: editingDica.descricao || '',
+            tagPt: editingDica.i18n?.pt?.tag || editingDica.tag || '',
+            tituloPt: editingDica.i18n?.pt?.titulo || editingDica.titulo || '',
+            descricaoPt: editingDica.i18n?.pt?.descricao || editingDica.descricao || '',
+            tagEn: editingDica.i18n?.en?.tag || '',
+            tituloEn: editingDica.i18n?.en?.titulo || '',
+            descricaoEn: editingDica.i18n?.en?.descricao || '',
+            tagEs: editingDica.i18n?.es?.tag || '',
+            tituloEs: editingDica.i18n?.es?.titulo || '',
+            descricaoEs: editingDica.i18n?.es?.descricao || '',
             numeroWhatsapp: editingDica.numeroWhatsapp || editingDica.linkWhatsapp || '',
           } : {
-            tag: '',
-            titulo: '',
-            descricao: '',
+            tagPt: '',
+            tituloPt: '',
+            descricaoPt: '',
+            tagEn: '',
+            tituloEn: '',
+            descricaoEn: '',
+            tagEs: '',
+            tituloEs: '',
+            descricaoEs: '',
             numeroWhatsapp: '',
           }}
         >
-          <Form.Item
-            label="Tag (opcional)"
-            name="tag"
-            validateStatus={validationErrors?.tag ? 'error' : ''}
-            help={validationErrors?.tag}
-            rules={[
-              { max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite a tag"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Título"
-            name="titulo"
-            validateStatus={validationErrors?.titulo ? 'error' : ''}
-            help={validationErrors?.titulo}
-            rules={[
-              { required: true, message: 'Por favor, digite o título!' },
-              { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
-            ]}
-          >
-            <Input
-              placeholder="Digite o título"
-              disabled={loading}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Descrição"
-            name="descricao"
-            validateStatus={validationErrors?.descricao ? 'error' : ''}
-            help={validationErrors?.descricao}
-            rules={[
-              { required: true, message: 'Por favor, digite a descrição!' },
-              { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
-            ]}
-          >
-            <TextArea
-              rows={5}
-              placeholder="Digite a descrição"
-              disabled={loading}
-            />
-          </Form.Item>
+          <Tabs defaultActiveKey="pt">
+            <TabPane tab="PT" key="pt">
+              <Form.Item
+                label="Tag (PT)"
+                name="tagPt"
+                validateStatus={validationErrors?.tagPt ? 'error' : ''}
+                help={validationErrors?.tagPt}
+                rules={[
+                  { required: true, message: 'Por favor, digite a tag (PT)!' },
+                  { min: 2, max: 100, message: 'A tag deve ter entre 2 e 100 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Digite a tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Título (PT)"
+                name="tituloPt"
+                validateStatus={validationErrors?.tituloPt ? 'error' : ''}
+                help={validationErrors?.tituloPt}
+                rules={[
+                  { required: true, message: 'Por favor, digite o título (PT)!' },
+                  { max: 150, message: 'O título deve ter no máximo 150 caracteres!' }
+                ]}
+              >
+                <Input placeholder="Digite o título" disabled={loading} />
+              </Form.Item>
+              <Form.Item
+                label="Descrição (PT)"
+                name="descricaoPt"
+                validateStatus={validationErrors?.descricaoPt ? 'error' : ''}
+                help={validationErrors?.descricaoPt}
+                rules={[
+                  { required: true, message: 'Por favor, digite a descrição (PT)!' },
+                  { max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }
+                ]}
+              >
+                <TextArea rows={5} placeholder="Digite a descrição" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="EN" key="en">
+              <Form.Item label="Tag (EN)" name="tagEn" validateStatus={validationErrors?.tagEn ? 'error' : ''} help={validationErrors?.tagEn} rules={[{ max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }]}>
+                <Input placeholder="Tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Título (EN)" name="tituloEn" validateStatus={validationErrors?.tituloEn ? 'error' : ''} help={validationErrors?.tituloEn} rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Title" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (EN)" name="descricaoEn" validateStatus={validationErrors?.descricaoEn ? 'error' : ''} help={validationErrors?.descricaoEn} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Description" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="ES" key="es">
+              <Form.Item label="Tag (ES)" name="tagEs" validateStatus={validationErrors?.tagEs ? 'error' : ''} help={validationErrors?.tagEs} rules={[{ max: 100, message: 'A tag deve ter no máximo 100 caracteres!' }]}>
+                <Input placeholder="Tag" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Título (ES)" name="tituloEs" validateStatus={validationErrors?.tituloEs ? 'error' : ''} help={validationErrors?.tituloEs} rules={[{ max: 150, message: 'O título deve ter no máximo 150 caracteres!' }]}>
+                <Input placeholder="Título" disabled={loading} />
+              </Form.Item>
+              <Form.Item label="Descrição (ES)" name="descricaoEs" validateStatus={validationErrors?.descricaoEs ? 'error' : ''} help={validationErrors?.descricaoEs} rules={[{ max: 1000, message: 'A descrição deve ter no máximo 1000 caracteres!' }]}>
+                <TextArea rows={5} placeholder="Descripción" disabled={loading} />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
 
           <Form.Item
             label="Número WhatsApp"
@@ -518,12 +573,12 @@ const Dica = ({
         </div>
       )}
 
-      {!loading && dicas.length === 0 && (
+      {!loading && asArray(dicas).length === 0 && (
         <Empty description="Nenhuma dica cadastrada ainda." />
       )}
 
       <Row gutter={[24, 24]}>
-        {dicas.map((dica) => (
+        {asArray(dicas).map((dica) => (
           <Col key={dica.id} xs={24} sm={12} lg={8} xl={6}>
             <Card
               hoverable

@@ -8,6 +8,7 @@ const PasseioContainer = () => {
   const { showError, showSuccess } = useToast();
   const [passeios, setPasseios] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState('pt');
   const [showForm, setShowForm] = useState(false);
   const [selectedPasseio, setSelectedPasseio] = useState(null);
   const [editingPasseio, setEditingPasseio] = useState(null);
@@ -15,29 +16,42 @@ const PasseioContainer = () => {
   const [validationErrors, setValidationErrors] = useState({});
   
   const [formData, setFormData] = useState({
-    tag: '',
-    titulo: '',
-    descricao: '',
+    tituloPt: '',
+    descricaoPt: '',
+    tagPt: '',
+    tagsPt: [],
+    tituloEn: '',
+    descricaoEn: '',
+    tagEn: '',
+    tagsEn: [],
+    tituloEs: '',
+    descricaoEs: '',
+    tagEs: '',
+    tagsEs: [],
     duracao: '',
     valor: '',
-    itensIncluidos: [],
+    itensIncluidosPt: [],
+    itensIncluidosEn: [],
+    itensIncluidosEs: [],
     numeroWhatsapp: '',
     categoria: 'AQUATICOS',
     topRanking: null,
     imagens: [],
     videos: [],
-    perguntasRespostas: [],
+    perguntasRespostasPt: [],
+    perguntasRespostasEn: [],
+    perguntasRespostasEs: [],
   });
 
   useEffect(() => {
     carregarPasseios();
-  }, []);
+  }, [lang]);
 
   const carregarPasseios = async () => {
     setLoading(true);
     try {
-      const response = await api.listarPasseios();
-      setPasseios(response);
+      const response = await api.listarPasseios(lang);
+      setPasseios(Array.isArray(response) ? response : []);
     } catch (err) {
       showError(err.message || 'Erro ao carregar passeios');
     } finally {
@@ -65,28 +79,35 @@ const PasseioContainer = () => {
     }
   };
 
-  const handleItensIncluidosChange = (itens) => {
-    setFormData(prev => ({
-      ...prev,
-      itensIncluidos: itens,
-    }));
-  };
-
   const handleSubmit = async (e, formValues = null) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const finalValues = formValues ? {
-        tag: formValues.tag,
-        titulo: formValues.titulo,
-        descricao: formValues.descricao,
+        tituloPt: formValues.tituloPt,
+        descricaoPt: formValues.descricaoPt,
+        tagPt: formValues.tagPt,
+        tagsPt: formValues.tagsPt || [],
+        tituloEn: formValues.tituloEn,
+        descricaoEn: formValues.descricaoEn,
+        tagEn: formValues.tagEn,
+        tagsEn: formValues.tagsEn || [],
+        tituloEs: formValues.tituloEs,
+        descricaoEs: formValues.descricaoEs,
+        tagEs: formValues.tagEs,
+        tagsEs: formValues.tagsEs || [],
         duracao: formValues.duracao,
         valor: formValues.valor,
         numeroWhatsapp: formValues.numeroWhatsapp,
         categoria: formValues.categoria,
         topRanking: formValues.topRanking,
-        itensIncluidos: formValues.itensIncluidos || [],
+        itensIncluidosPt: formValues.itensIncluidosPt || [],
+        itensIncluidosEn: formValues.itensIncluidosEn || [],
+        itensIncluidosEs: formValues.itensIncluidosEs || [],
+        perguntasRespostasPt: formValues.perguntasRespostasPt || [],
+        perguntasRespostasEn: formValues.perguntasRespostasEn || [],
+        perguntasRespostasEs: formValues.perguntasRespostasEs || [],
       } : formData;
       
       if (finalValues.topRanking) {
@@ -105,11 +126,21 @@ const PasseioContainer = () => {
 
       const formDataToSend = new FormData();
       
-      if (finalValues.tag) {
-        formDataToSend.append('tag', finalValues.tag);
-      }
-      formDataToSend.append('titulo', finalValues.titulo);
-      formDataToSend.append('descricao', finalValues.descricao);
+      formDataToSend.append('tituloPt', finalValues.tituloPt);
+      formDataToSend.append('descricaoPt', finalValues.descricaoPt);
+      if (finalValues.tagPt) formDataToSend.append('tagPt', finalValues.tagPt);
+      (finalValues.tagsPt || []).forEach((t) => formDataToSend.append('tagsPt', t));
+
+      if (finalValues.tituloEn) formDataToSend.append('tituloEn', finalValues.tituloEn);
+      if (finalValues.descricaoEn) formDataToSend.append('descricaoEn', finalValues.descricaoEn);
+      if (finalValues.tagEn) formDataToSend.append('tagEn', finalValues.tagEn);
+      (finalValues.tagsEn || []).forEach((t) => formDataToSend.append('tagsEn', t));
+
+      if (finalValues.tituloEs) formDataToSend.append('tituloEs', finalValues.tituloEs);
+      if (finalValues.descricaoEs) formDataToSend.append('descricaoEs', finalValues.descricaoEs);
+      if (finalValues.tagEs) formDataToSend.append('tagEs', finalValues.tagEs);
+      (finalValues.tagsEs || []).forEach((t) => formDataToSend.append('tagsEs', t));
+
       formDataToSend.append('duracao', finalValues.duracao);
       formDataToSend.append('valor', finalValues.valor);
       formDataToSend.append('numeroWhatsapp', finalValues.numeroWhatsapp);
@@ -119,9 +150,9 @@ const PasseioContainer = () => {
         formDataToSend.append('topRanking', finalValues.topRanking);
       }
       
-      (finalValues.itensIncluidos || []).forEach((item) => {
-        formDataToSend.append('itensIncluidos', item);
-      });
+      (finalValues.itensIncluidosPt || []).forEach((item) => formDataToSend.append('itensIncluidosPt', item));
+      (finalValues.itensIncluidosEn || []).forEach((item) => formDataToSend.append('itensIncluidosEn', item));
+      (finalValues.itensIncluidosEs || []).forEach((item) => formDataToSend.append('itensIncluidosEs', item));
       
       // Adicionar múltiplas imagens
       if (formData.imagens && formData.imagens.length > 0) {
@@ -138,11 +169,27 @@ const PasseioContainer = () => {
       }
       
       // Adicionar perguntas e respostas
-      if (formData.perguntasRespostas && formData.perguntasRespostas.length > 0) {
-        formData.perguntasRespostas.forEach((pr, index) => {
+      if (finalValues.perguntasRespostasPt && finalValues.perguntasRespostasPt.length > 0) {
+        finalValues.perguntasRespostasPt.forEach((pr, index) => {
           if (pr.pergunta && pr.resposta) {
-            formDataToSend.append(`perguntasRespostas[${index}].pergunta`, pr.pergunta);
-            formDataToSend.append(`perguntasRespostas[${index}].resposta`, pr.resposta);
+            formDataToSend.append(`perguntasRespostasPt[${index}].pergunta`, pr.pergunta);
+            formDataToSend.append(`perguntasRespostasPt[${index}].resposta`, pr.resposta);
+          }
+        });
+      }
+      if (finalValues.perguntasRespostasEn && finalValues.perguntasRespostasEn.length > 0) {
+        finalValues.perguntasRespostasEn.forEach((pr, index) => {
+          if (pr.pergunta && pr.resposta) {
+            formDataToSend.append(`perguntasRespostasEn[${index}].pergunta`, pr.pergunta);
+            formDataToSend.append(`perguntasRespostasEn[${index}].resposta`, pr.resposta);
+          }
+        });
+      }
+      if (finalValues.perguntasRespostasEs && finalValues.perguntasRespostasEs.length > 0) {
+        finalValues.perguntasRespostasEs.forEach((pr, index) => {
+          if (pr.pergunta && pr.resposta) {
+            formDataToSend.append(`perguntasRespostasEs[${index}].pergunta`, pr.pergunta);
+            formDataToSend.append(`perguntasRespostasEs[${index}].resposta`, pr.resposta);
           }
         });
       }
@@ -156,18 +203,31 @@ const PasseioContainer = () => {
       }
 
       setFormData({
-        tag: '',
-        titulo: '',
-        descricao: '',
+        tituloPt: '',
+        descricaoPt: '',
+        tagPt: '',
+        tagsPt: [],
+        tituloEn: '',
+        descricaoEn: '',
+        tagEn: '',
+        tagsEn: [],
+        tituloEs: '',
+        descricaoEs: '',
+        tagEs: '',
+        tagsEs: [],
         duracao: '',
         valor: '',
-        itensIncluidos: [],
+        itensIncluidosPt: [],
+        itensIncluidosEn: [],
+        itensIncluidosEs: [],
         numeroWhatsapp: '',
         categoria: 'AQUATICOS',
         topRanking: null,
         imagens: [],
         videos: [],
-        perguntasRespostas: [],
+        perguntasRespostasPt: [],
+        perguntasRespostasEn: [],
+        perguntasRespostasEs: [],
       });
       setShowForm(false);
       setEditingPasseio(null);
@@ -203,7 +263,7 @@ const PasseioContainer = () => {
   const handleViewDetails = async (id) => {
     setLoading(true);
     try {
-      const passeio = await api.buscarPasseioPorId(id);
+      const passeio = await api.buscarPasseioPorId(id, lang);
       setSelectedPasseio(passeio);
     } catch (err) {
       showError(err.message || 'Erro ao buscar detalhes do passeio');
@@ -218,17 +278,30 @@ const PasseioContainer = () => {
 
   const resetFormData = () => {
     setFormData({
-      tag: '',
-      titulo: '',
-      descricao: '',
+      tituloPt: '',
+      descricaoPt: '',
+      tagPt: '',
+      tagsPt: [],
+      tituloEn: '',
+      descricaoEn: '',
+      tagEn: '',
+      tagsEn: [],
+      tituloEs: '',
+      descricaoEs: '',
+      tagEs: '',
+      tagsEs: [],
       duracao: '',
       valor: '',
-      itensIncluidos: [],
+      itensIncluidosPt: [],
+      itensIncluidosEn: [],
+      itensIncluidosEs: [],
       numeroWhatsapp: '',
       categoria: 'AQUATICOS',
       topRanking: null,
       imagens: [],
-      perguntasRespostas: [],
+      perguntasRespostasPt: [],
+      perguntasRespostasEn: [],
+      perguntasRespostasEs: [],
     });
   };
 
@@ -255,27 +328,41 @@ const PasseioContainer = () => {
 
   const handleEdit = (passeio) => {
     setEditingPasseio(passeio);
+    const i18n = passeio?.i18n || {};
     setFormData({
-      tag: passeio.tag,
-      titulo: passeio.titulo,
-      descricao: passeio.descricao,
+      tituloPt: i18n.pt?.titulo || passeio.titulo || '',
+      descricaoPt: i18n.pt?.descricao || passeio.descricao || '',
+      tagPt: i18n.pt?.tag || passeio.tag || '',
+      tagsPt: i18n.pt?.tags || passeio.tags || [],
+      tituloEn: i18n.en?.titulo || '',
+      descricaoEn: i18n.en?.descricao || '',
+      tagEn: i18n.en?.tag || '',
+      tagsEn: i18n.en?.tags || [],
+      tituloEs: i18n.es?.titulo || '',
+      descricaoEs: i18n.es?.descricao || '',
+      tagEs: i18n.es?.tag || '',
+      tagsEs: i18n.es?.tags || [],
       duracao: passeio.duracao,
       valor: passeio.valor?.toString() || '',
-      itensIncluidos: passeio.itensIncluidos || [],
+      itensIncluidosPt: i18n.pt?.itensIncluidos || [],
+      itensIncluidosEn: i18n.en?.itensIncluidos || [],
+      itensIncluidosEs: i18n.es?.itensIncluidos || [],
       numeroWhatsapp: passeio.numeroWhatsapp || passeio.linkWhatsapp || '',
       categoria: passeio.categoria || 'AQUATICOS',
       topRanking: passeio.topRanking || null,
       imagens: [],
       videos: [],
-      perguntasRespostas: passeio.perguntasRespostas || [],
+      perguntasRespostasPt: i18n.pt?.perguntasRespostas || passeio.perguntasRespostas || [],
+      perguntasRespostasEn: i18n.en?.perguntasRespostas || [],
+      perguntasRespostasEs: i18n.es?.perguntasRespostas || [],
     });
     setShowForm(true);
   };
 
-  const handlePerguntasRespostasChange = (perguntasRespostas) => {
+  const handlePerguntasRespostasChange = (idioma, perguntasRespostas) => {
     setFormData(prev => ({
       ...prev,
-      perguntasRespostas: perguntasRespostas,
+      [idioma]: perguntasRespostas,
     }));
   };
 
@@ -299,6 +386,8 @@ const PasseioContainer = () => {
       <Passeio
         passeios={passeios}
         loading={loading}
+        lang={lang}
+        onLangChange={setLang}
         showForm={showForm}
         selectedPasseio={selectedPasseio}
         editingPasseio={editingPasseio}
@@ -307,7 +396,6 @@ const PasseioContainer = () => {
         validationErrors={validationErrors}
         onInputChange={handleInputChange}
         onFileChange={handleFileChange}
-        onItensIncluidosChange={handleItensIncluidosChange}
         onPerguntasRespostasChange={handlePerguntasRespostasChange}
         onSubmit={handleSubmit}
         onShowForm={handleShowForm}

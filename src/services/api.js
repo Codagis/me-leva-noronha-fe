@@ -87,14 +87,16 @@ const api = {
     });
   },
 
-  async listarDicas() {
-    return this.request('/api/dicas', {
+  async listarDicas(lang = 'pt') {
+    const q = new URLSearchParams({ lang: lang || 'pt' });
+    return this.request(`/api/dicas?${q}`, {
       method: 'GET',
     });
   },
 
-  async buscarDicaPorId(id) {
-    return this.request(`/api/dicas/${id}`, {
+  async buscarDicaPorId(id, lang = 'pt') {
+    const q = new URLSearchParams({ lang: lang || 'pt' });
+    return this.request(`/api/dicas/${id}?${q}`, {
       method: 'GET',
     });
   },
@@ -232,14 +234,16 @@ const api = {
     }
   },
 
-  async listarVidaNoturna() {
-    return this.request('/api/vida-noturna', {
+  async listarVidaNoturna(lang = 'pt') {
+    const q = new URLSearchParams({ lang: lang || 'pt' });
+    return this.request(`/api/vida-noturna?${q}`, {
       method: 'GET',
     });
   },
 
-  async buscarVidaNoturnaPorId(id) {
-    return this.request(`/api/vida-noturna/${id}`, {
+  async buscarVidaNoturnaPorId(id, lang = 'pt') {
+    const q = new URLSearchParams({ lang: lang || 'pt' });
+    return this.request(`/api/vida-noturna/${id}?${q}`, {
       method: 'GET',
     });
   },
@@ -369,14 +373,16 @@ const api = {
     }
   },
 
-  async listarPasseios() {
-    return this.request('/api/passeios', {
+  async listarPasseios(lang = 'pt') {
+    const endpoint = lang ? `/api/passeios?lang=${encodeURIComponent(lang)}` : '/api/passeios';
+    return this.request(endpoint, {
       method: 'GET',
     });
   },
 
-  async buscarPasseioPorId(id) {
-    return this.request(`/api/passeios/${id}`, {
+  async buscarPasseioPorId(id, lang = 'pt') {
+    const endpoint = lang ? `/api/passeios/${id}?lang=${encodeURIComponent(lang)}` : `/api/passeios/${id}`;
+    return this.request(endpoint, {
       method: 'GET',
     });
   },
@@ -510,17 +516,20 @@ const api = {
     }
   },
 
-  async listarRestaurantes(categoria = null) {
-    const endpoint = categoria && categoria !== 'null' && categoria !== 'undefined'
-      ? `/api/restaurantes?categoria=${encodeURIComponent(categoria)}`
-      : '/api/restaurantes';
-    return this.request(endpoint, {
+  async listarRestaurantes(categoria = null, lang = 'pt') {
+    const params = new URLSearchParams();
+    if (categoria != null && categoria !== '' && categoria !== 'null' && categoria !== 'undefined') {
+      params.set('categoria', categoria);
+    }
+    params.set('lang', lang || 'pt');
+    return this.request(`/api/restaurantes?${params.toString()}`, {
       method: 'GET',
     });
   },
 
-  async buscarRestaurantePorId(id) {
-    return this.request(`/api/restaurantes/${id}`, {
+  async buscarRestaurantePorId(id, lang = 'pt') {
+    const q = new URLSearchParams({ lang: lang || 'pt' });
+    return this.request(`/api/restaurantes/${id}?${q}`, {
       method: 'GET',
     });
   },
