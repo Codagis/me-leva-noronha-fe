@@ -108,7 +108,7 @@ const Passeio = ({
     } else {
       form.resetFields();
     }
-  }, [showForm, editingPasseio?.id, editingPasseio?.numeroWhatsapp, editingPasseio?.linkWhatsapp, form]);
+  }, [showForm, editingPasseio, form]);
 
   useEffect(() => {
     if (validationErrors && Object.keys(validationErrors).length > 0) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/Layout';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
@@ -43,11 +43,7 @@ const PasseioContainer = () => {
     perguntasRespostasEs: [],
   });
 
-  useEffect(() => {
-    carregarPasseios();
-  }, [lang]);
-
-  const carregarPasseios = async () => {
+  const carregarPasseios = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.listarPasseios(lang);
@@ -57,7 +53,11 @@ const PasseioContainer = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [lang, showError]);
+
+  useEffect(() => {
+    carregarPasseios();
+  }, [carregarPasseios]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/Layout';
 import { useToast } from '../../contexts/ToastContext';
 import api from '../../services/api';
@@ -20,11 +20,7 @@ const PontoInteresseContainer = () => {
     linkGoogleMaps: '',
   });
 
-  useEffect(() => {
-    carregarPontosInteresse();
-  }, []);
-
-  const carregarPontosInteresse = async () => {
+  const carregarPontosInteresse = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.listarPontosInteresse();
@@ -34,7 +30,11 @@ const PontoInteresseContainer = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    carregarPontosInteresse();
+  }, [carregarPontosInteresse]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
