@@ -1,14 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Layout as AntLayout, Menu, Button, Typography } from 'antd';
-import { 
-  DashboardOutlined, 
-  BulbOutlined, 
-  MoonOutlined, 
+import {
+  DashboardOutlined,
+  BulbOutlined,
+  MoonOutlined,
   LogoutOutlined,
   CarOutlined,
   ShopOutlined,
   EnvironmentOutlined,
-  BankOutlined
+  BankOutlined,
+  CompassOutlined,
+  CarFilled,
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -62,11 +64,23 @@ const Layout = ({ children }) => {
       icon: <EnvironmentOutlined />,
       onClick: () => navigate('/pontos-interesse')
     },
-    { 
-      key: '/aeroportos', 
-      label: 'Aeroportos', 
+    {
+      key: '/aeroportos',
+      label: 'Aeroportos',
       icon: <BankOutlined />,
       onClick: () => navigate('/aeroportos')
+    },
+    {
+      key: '/passeios-calculadora',
+      label: 'Passeios Calculadora',
+      icon: <CompassOutlined />,
+      onClick: () => navigate('/passeios-calculadora')
+    },
+    {
+      key: '/aluguel-veiculos',
+      label: 'Aluguel de Veículos',
+      icon: <CarFilled />,
+      onClick: () => navigate('/aluguel-veiculos')
     },
   ];
 

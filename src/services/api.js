@@ -806,6 +806,56 @@ const api = {
       method: 'DELETE',
     });
   },
+
+  // Aluguel de Veículos
+  async listarVeiculosAluguel(apenasAtivos = false) {
+    return this.request(`/api/aluguel-veiculos?apenasAtivos=${apenasAtivos}`, { method: 'GET' });
+  },
+
+  async cadastrarVeiculoAluguel(data) {
+    return this.request('/api/aluguel-veiculos', { method: 'POST', body: data });
+  },
+
+  async atualizarVeiculoAluguel(id, data) {
+    return this.request(`/api/aluguel-veiculos/${id}`, { method: 'PUT', body: data });
+  },
+
+  async desativarVeiculoAluguel(id) {
+    return this.request(`/api/aluguel-veiculos/${id}/desativar`, { method: 'PUT' });
+  },
+
+  async ativarVeiculoAluguel(id) {
+    return this.request(`/api/aluguel-veiculos/${id}/ativar`, { method: 'PUT' });
+  },
+
+  async excluirVeiculoAluguel(id) {
+    return this.request(`/api/aluguel-veiculos/${id}`, { method: 'DELETE' });
+  },
+
+  // Passeios da Calculadora
+  async listarPasseiosCalculadora() {
+    return this.request('/api/calculadora-passeios', { method: 'GET' });
+  },
+
+  async cadastrarPasseioCalculadora(data) {
+    return this.request('/api/calculadora-passeios', { method: 'POST', body: data });
+  },
+
+  async atualizarPasseioCalculadora(id, data) {
+    return this.request(`/api/calculadora-passeios/${id}`, { method: 'PUT', body: data });
+  },
+
+  async desativarPasseioCalculadora(id) {
+    return this.request(`/api/calculadora-passeios/${id}/desativar`, { method: 'PUT' });
+  },
+
+  async ativarPasseioCalculadora(id) {
+    return this.request(`/api/calculadora-passeios/${id}/ativar`, { method: 'PUT' });
+  },
+
+  async excluirPasseioCalculadora(id) {
+    return this.request(`/api/calculadora-passeios/${id}`, { method: 'DELETE' });
+  },
 };
 
 export default api;

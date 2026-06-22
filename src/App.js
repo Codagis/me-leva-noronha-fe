@@ -11,6 +11,8 @@ import Passeio from './pages/Passeio/Container';
 import Restaurante from './pages/Restaurante/Container';
 import PontoInteresse from './pages/PontoInteresse/Container';
 import Aeroporto from './pages/Aeroporto/Container';
+import PasseioCalculadora from './pages/PasseioCalculadora/Container';
+import AluguelVeiculosPage from './pages/AluguelVeiculos/Container';
 import 'antd/dist/reset.css';
 import './App.css';
 
@@ -81,6 +83,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <Aeroporto />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/passeios-calculadora"
+              element={
+                <PrivateRoute>
+                  <PasseioCalculadora />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/aluguel-veiculos"
+              element={
+                <PrivateRoute>
+                  <AluguelVeiculosPage />
                 </PrivateRoute>
               }
             />
